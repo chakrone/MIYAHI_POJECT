@@ -1,0 +1,8 @@
+fastapi
+uvicorn[standard]
+numpy
+pandas
+psycopg[binary]
+sqlalchemy
+pydantic
+apscheduler
