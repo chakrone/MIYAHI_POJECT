@@ -13,6 +13,7 @@ from contextlib import asynccontextmanager
 import numpy as np
 import pandas as pd
 from fastapi import FastAPI, Query
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import create_engine, text
 from apscheduler.schedulers.background import BackgroundScheduler
 
@@ -158,6 +159,7 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan
 )
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
 
 @app.get("/api/forecast/{meter_id}")
