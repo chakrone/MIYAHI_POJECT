@@ -1,0 +1,33 @@
+# ============================================================
+# Shared configuration for the Ingestion Service
+# Served by Config Server to ingestion-service on startup
+# ============================================================
+
+server:
+  port: 8081
+
+spring:
+  application:
+    name: ingestion-service
+  datasource:
+    url: jdbc:postgresql://timescaledb:5432/miyahi_ts
+    username: miyahi
+    password: miyahi_ts_dev_2026
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  data:
+    redis:
+      host: redis
+      port: 6379
+
+mqtt:
+  broker:
+    url: tcp://mosquitto:1883
+    client-id: miyahi-ingestor
+  topic: meters/+/data
+  qos: 1

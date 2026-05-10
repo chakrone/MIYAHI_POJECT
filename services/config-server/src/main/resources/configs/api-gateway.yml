@@ -1,0 +1,59 @@
+# ============================================================
+# Shared configuration for the API Gateway
+# ============================================================
+
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      routes:
+        # --- Java Services ---
+        - id: meter-registry
+          uri: lb://meter-registry-service
+          predicates:
+            - Path=/api/meters/**,/api/zones/**
+
+        - id: ingestion-readings
+          uri: lb://ingestion-service
+          predicates:
+            - Path=/api/readings/**
+
+        - id: alerts
+          uri: lb://alert-service
+          predicates:
+            - Path=/api/alerts/**,/api/alert-rules/**
+
+        - id: billing
+          uri: lb://billing-service
+          predicates:
+            - Path=/api/billing/**,/api/goals/**
+
+        # --- Python Services ---
+        - id: anomaly-detection
+          uri: http://anomaly-detection:8090
+          predicates:
+            - Path=/api/anomalies/**
+
+        - id: forecasting
+          uri: http://forecasting:8091
+          predicates:
+            - Path=/api/forecast/**
+
+        - id: weather
+          uri: http://weather-service:8092
+          predicates:
+            - Path=/api/weather/**
+
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins:
+              - "http://localhost:5173"
+              - "http://localhost:3000"
+            allowedMethods: "*"
+            allowedHeaders: "*"
+            allowCredentials: true

@@ -1,0 +1,98 @@
+package ma.miyahi.ingestion.controller;
+
+import ma.miyahi.ingestion.model.MeterReading;
+import ma.miyahi.ingestion.repository.MeterReadingRepository;
+import ma.miyahi.ingestion.service.IngestionHandler;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.Duration;
+import java.time.Instant;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * REST API for querying ingested meter readings.
+ * These endpoints are consumed by the React dashboard via the API Gateway.
+ */
+@RestController
+@RequestMapping("/api/readings")
+public class ReadingsController {
+
+    private final MeterReadingRepository repository;
+    private final IngestionHandler ingestionHandler;
+
+    public ReadingsController(MeterReadingRepository repository, IngestionHandler ingestionHandler) {
+        this.repository = repository;
+        this.ingestionHandler = ingestionHandler;
+    }
+
+    /**
+     * GET /api/readings/meters — List all meter IDs that have reported data.
+     */
+    @GetMapping("/meters")
+    public ResponseEntity<List<String>> listMeters() {
+        return ResponseEntity.ok(repository.findDistinctMeterIds());
+    }
+
+    /**
+     * GET /api/readings/{meterId}/latest — Most recent reading for a meter.
+     */
+    @GetMapping("/{meterId}/latest")
+    public ResponseEntity<MeterReading> getLatest(@PathVariable String meterId) {
+        return repository.findTopByMeterIdOrderByTimeDesc(meterId)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    /**
+     * GET /api/readings/{meterId}?range=1h — Readings within a time range.
+     * Supported ranges: 5m, 15m, 30m, 1h, 6h, 24h, 7d, 30d
+     */
+    @GetMapping("/{meterId}")
+    public ResponseEntity<List<MeterReading>> getReadings(
+            @PathVariable String meterId,
+            @RequestParam(defaultValue = "1h") String range) {
+
+        Duration duration = parseDuration(range);
+        Instant since = Instant.now().minus(duration);
+
+        List<MeterReading> readings = repository.findRecentReadings(meterId, since);
+        return ResponseEntity.ok(readings);
+    }
+
+    /**
+     * GET /api/readings/stats — Ingestion pipeline health stats.
+     */
+    @GetMapping("/stats")
+    public ResponseEntity<Map<String, Object>> getStats() {
+        Map<String, Object> stats = new HashMap<>();
+        stats.put("messages_processed", ingestionHandler.getMessagesProcessed());
+        stats.put("messages_dropped", ingestionHandler.getMessagesDropped());
+        stats.put("active_meters", repository.findDistinctMeterIds().size());
+        return ResponseEntity.ok(stats);
+    }
+
+    /**
+     * Parse human-readable duration strings like "5m", "1h", "7d".
+     */
+    private Duration parseDuration(String range) {
+        if (range == null || range.isEmpty()) return Duration.ofHours(1);
+
+        String value = range.substring(0, range.length() - 1);
+        char unit = range.charAt(range.length() - 1);
+
+        try {
+            long amount = Long.parseLong(value);
+            return switch (unit) {
+                case 'm' -> Duration.ofMinutes(amount);
+                case 'h' -> Duration.ofHours(amount);
+                case 'd' -> Duration.ofDays(amount);
+                default -> Duration.ofHours(1);
+            };
+        } catch (NumberFormatException e) {
+            return Duration.ofHours(1);
+        }
+    }
+}

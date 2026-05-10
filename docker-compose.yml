@@ -1,0 +1,323 @@
+# ============================================================
+# MIYAHI IoT Water Monitoring Platform — Docker Compose
+# ============================================================
+# Usage:
+#   docker-compose up -d                  → Start all infrastructure
+#   docker-compose --profile java up -d   → Start infra + Java services
+#   docker-compose --profile python up -d → Start infra + Python services
+#   docker-compose --profile all up -d    → Start everything
+# ============================================================
+
+services:
+
+  # ──────────────────────────────────────────────
+  # INFRASTRUCTURE
+  # ──────────────────────────────────────────────
+
+  mosquitto:
+    image: eclipse-mosquitto:2
+    container_name: miyahi-mosquitto
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./infrastructure/mosquitto/config:/mosquitto/config
+      - mosquitto-data:/mosquitto/data
+      - mosquitto-log:/mosquitto/log
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "mosquitto_sub -t '$$SYS/#' -C 1 -u '' -P '' | grep -v Error || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  timescaledb:
+    image: timescale/timescaledb:latest-pg16
+    container_name: miyahi-timescaledb
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: ${TS_DB:-miyahi_ts}
+      POSTGRES_USER: ${TS_USER:-miyahi}
+      POSTGRES_PASSWORD: ${TS_PASSWORD:-miyahi_ts_dev_2026}
+    volumes:
+      - timescale-data:/var/lib/postgresql/data
+      - ./infrastructure/timescaledb/init.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${TS_USER:-miyahi} -d ${TS_DB:-miyahi_ts}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres:
+    image: postgres:16
+    container_name: miyahi-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: ${PG_DB:-miyahi}
+      POSTGRES_USER: ${PG_USER:-miyahi}
+      POSTGRES_PASSWORD: ${PG_PASSWORD:-miyahi_dev_2026}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./infrastructure/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${PG_USER:-miyahi} -d ${PG_DB:-miyahi}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: miyahi-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: miyahi-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GF_SECURITY_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GF_SECURITY_ADMIN_PASSWORD:-miyahi_grafana_2026}
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./infrastructure/grafana/provisioning:/etc/grafana/provisioning
+    depends_on:
+      timescaledb:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ──────────────────────────────────────────────
+  # JAVA SERVICES (Spring Boot)
+  # ──────────────────────────────────────────────
+
+  eureka-server:
+    build: ./services/eureka-server
+    container_name: miyahi-eureka
+    ports:
+      - "8761:8761"
+    profiles: ["java", "all"]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8761/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+
+  config-server:
+    build: ./services/config-server
+    container_name: miyahi-config
+    ports:
+      - "8888:8888"
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+    profiles: ["java", "all"]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8888/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+
+  api-gateway:
+    build: ./services/api-gateway
+    container_name: miyahi-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+    profiles: ["java", "all"]
+    restart: unless-stopped
+
+  ingestion-service:
+    build: ./services/ingestion-service
+    container_name: miyahi-ingestion
+    ports:
+      - "8081:8081"
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      SPRING_DATASOURCE_URL: jdbc:postgresql://timescaledb:5432/${TS_DB:-miyahi_ts}
+      SPRING_DATASOURCE_USERNAME: ${TS_USER:-miyahi}
+      SPRING_DATASOURCE_PASSWORD: ${TS_PASSWORD:-miyahi_ts_dev_2026}
+      MQTT_BROKER_URL: tcp://mosquitto:1883
+      SPRING_DATA_REDIS_HOST: redis
+    depends_on:
+      mosquitto:
+        condition: service_healthy
+      timescaledb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    profiles: ["java", "all"]
+    restart: unless-stopped
+
+  meter-registry-service:
+    build: ./services/meter-registry-service
+    container_name: miyahi-meter-registry
+    ports:
+      - "8082:8082"
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${PG_DB:-miyahi}
+      SPRING_DATASOURCE_USERNAME: ${PG_USER:-miyahi}
+      SPRING_DATASOURCE_PASSWORD: ${PG_PASSWORD:-miyahi_dev_2026}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    profiles: ["java", "all"]
+    restart: unless-stopped
+
+  alert-service:
+    build: ./services/alert-service
+    container_name: miyahi-alerts
+    ports:
+      - "8083:8083"
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${PG_DB:-miyahi}
+      SPRING_DATASOURCE_USERNAME: ${PG_USER:-miyahi}
+      SPRING_DATASOURCE_PASSWORD: ${PG_PASSWORD:-miyahi_dev_2026}
+      SPRING_DATA_REDIS_HOST: redis
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    profiles: ["java", "all"]
+    restart: unless-stopped
+
+  billing-service:
+    build: ./services/billing-service
+    container_name: miyahi-billing
+    ports:
+      - "8084:8084"
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${PG_DB:-miyahi}
+      SPRING_DATASOURCE_USERNAME: ${PG_USER:-miyahi}
+      SPRING_DATASOURCE_PASSWORD: ${PG_PASSWORD:-miyahi_dev_2026}
+      TIMESCALE_DATASOURCE_URL: jdbc:postgresql://timescaledb:5432/${TS_DB:-miyahi_ts}
+      TIMESCALE_DATASOURCE_USERNAME: ${TS_USER:-miyahi}
+      TIMESCALE_DATASOURCE_PASSWORD: ${TS_PASSWORD:-miyahi_ts_dev_2026}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      timescaledb:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    profiles: ["java", "all"]
+    restart: unless-stopped
+
+  # ──────────────────────────────────────────────
+  # PYTHON SERVICES (FastAPI)
+  # ──────────────────────────────────────────────
+
+  anomaly-detection:
+    build: ./services/anomaly-detection
+    container_name: miyahi-anomaly
+    ports:
+      - "8090:8090"
+    environment:
+      REDIS_HOST: redis
+      TIMESCALE_HOST: timescaledb
+      TIMESCALE_PORT: 5432
+      TIMESCALE_DB: ${TS_DB:-miyahi_ts}
+      TIMESCALE_USER: ${TS_USER:-miyahi}
+      TIMESCALE_PASSWORD: ${TS_PASSWORD:-miyahi_ts_dev_2026}
+    depends_on:
+      redis:
+        condition: service_healthy
+      timescaledb:
+        condition: service_healthy
+    profiles: ["python", "all"]
+    restart: unless-stopped
+
+  forecasting:
+    build: ./services/forecasting
+    container_name: miyahi-forecast
+    ports:
+      - "8091:8091"
+    environment:
+      TIMESCALE_HOST: timescaledb
+      TIMESCALE_PORT: 5432
+      TIMESCALE_DB: ${TS_DB:-miyahi_ts}
+      TIMESCALE_USER: ${TS_USER:-miyahi}
+      TIMESCALE_PASSWORD: ${TS_PASSWORD:-miyahi_ts_dev_2026}
+    depends_on:
+      timescaledb:
+        condition: service_healthy
+    profiles: ["python", "all"]
+    restart: unless-stopped
+
+  weather-service:
+    build: ./services/weather-service
+    container_name: miyahi-weather
+    ports:
+      - "8092:8092"
+    environment:
+      TIMESCALE_HOST: timescaledb
+      TIMESCALE_PORT: 5432
+      TIMESCALE_DB: ${TS_DB:-miyahi_ts}
+      TIMESCALE_USER: ${TS_USER:-miyahi}
+      TIMESCALE_PASSWORD: ${TS_PASSWORD:-miyahi_ts_dev_2026}
+      OWM_API_KEY: ${OWM_API_KEY:-your_api_key_here}
+      OWM_CITY: ${OWM_CITY:-Casablanca}
+      OWM_COUNTRY: ${OWM_COUNTRY:-MA}
+    depends_on:
+      timescaledb:
+        condition: service_healthy
+    profiles: ["python", "all"]
+    restart: unless-stopped
+
+  # ──────────────────────────────────────────────
+  # SIMULATOR (run on-demand)
+  # ──────────────────────────────────────────────
+
+  simulator:
+    build: ./services/simulator
+    container_name: miyahi-simulator
+    environment:
+      MQTT_HOST: mosquitto
+      MQTT_PORT: 1883
+    depends_on:
+      mosquitto:
+        condition: service_healthy
+    profiles: ["simulator", "all"]
+    restart: unless-stopped
+
+# ──────────────────────────────────────────────
+# VOLUMES
+# ──────────────────────────────────────────────
+volumes:
+  mosquitto-data:
+  mosquitto-log:
+  timescale-data:
+  postgres-data:
+  redis-data:
+  grafana-data:

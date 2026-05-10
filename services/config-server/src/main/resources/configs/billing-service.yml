@@ -1,0 +1,28 @@
+# ============================================================
+# Shared configuration for the Billing Service
+# ============================================================
+
+server:
+  port: 8084
+
+spring:
+  application:
+    name: billing-service
+  datasource:
+    url: jdbc:postgresql://postgres:5432/miyahi
+    username: miyahi
+    password: miyahi_dev_2026
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+# Secondary datasource for TimescaleDB reads
+timescale:
+  datasource:
+    url: jdbc:postgresql://timescaledb:5432/miyahi_ts
+    username: miyahi
+    password: miyahi_ts_dev_2026

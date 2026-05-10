@@ -1,0 +1,35 @@
+# ============================================================
+# Shared configuration for the Alert Service
+# ============================================================
+
+server:
+  port: 8083
+
+spring:
+  application:
+    name: alert-service
+  datasource:
+    url: jdbc:postgresql://postgres:5432/miyahi
+    username: miyahi
+    password: miyahi_dev_2026
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  data:
+    redis:
+      host: redis
+      port: 6379
+
+# Alert notification providers (configure in .env for production)
+alerts:
+  twilio:
+    account-sid: ${TWILIO_ACCOUNT_SID:disabled}
+    auth-token: ${TWILIO_AUTH_TOKEN:disabled}
+    from-number: ${TWILIO_FROM_NUMBER:+0000000000}
+  sendgrid:
+    api-key: ${SENDGRID_API_KEY:disabled}
+    from-email: ${SENDGRID_FROM_EMAIL:alerts@miyahi.ma}

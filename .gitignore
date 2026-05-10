@@ -1,0 +1,46 @@
+# Environment
+.env
+
+# Java / Maven
+**/target/
+**/*.class
+**/*.jar
+**/*.war
+**/.mvn/wrapper/maven-wrapper.jar
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+
+# Node
+**/node_modules/
+**/dist/
+**/.cache/
+
+# Python
+**/__pycache__/
+**/*.pyc
+**/.venv/
+**/venv/
+
+# Docker
+**/docker-compose.override.yml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+**/*.log
+**/logs/
+
+# Data volumes (if local)
+data/
+
+#other
+implementation_plan.md
+IMPLEMENTATION_STEPS.md
+iot_water_monitoring_platform.md
