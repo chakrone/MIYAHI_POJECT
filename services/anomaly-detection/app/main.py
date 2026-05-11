@@ -16,6 +16,7 @@ import redis
 import numpy as np
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
+from prometheus_fastapi_instrumentator import Instrumentator
 from sqlalchemy import create_engine, text
 
 from app.config import (
@@ -191,6 +192,7 @@ app = FastAPI(
     lifespan=lifespan
 )
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+Instrumentator().instrument(app).expose(app)
 
 
 @app.get("/api/anomalies/{meter_id}")

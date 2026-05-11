@@ -12,6 +12,8 @@ import os
 # ──────────────────────────────────────────────
 MQTT_HOST = os.getenv("MQTT_HOST", "localhost")
 MQTT_PORT = int(os.getenv("MQTT_PORT", "1883"))
+MQTT_USERNAME = os.getenv("MQTT_USERNAME", "miyahi_backend")
+MQTT_PASSWORD = os.getenv("MQTT_PASSWORD", "backend_secret_2026")
 MQTT_QOS = 1
 MQTT_TOPIC_TEMPLATE = "meters/{meter_id}/data"
 MQTT_STATUS_TOPIC_TEMPLATE = "meters/{meter_id}/status"

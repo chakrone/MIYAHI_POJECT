@@ -24,6 +24,8 @@ from .config import (
     METER_PROFILES,
     MQTT_HOST,
     MQTT_PORT,
+    MQTT_USERNAME,
+    MQTT_PASSWORD,
     MQTT_QOS,
     MQTT_STATUS_TOPIC_TEMPLATE,
     MQTT_TOPIC_TEMPLATE,
@@ -141,6 +143,8 @@ def main():
     for attempt in range(1, max_retries + 1):
         try:
             log(f"[CONN] Connecting to broker (attempt {attempt}/{max_retries})...")
+            if MQTT_USERNAME and MQTT_PASSWORD:
+                client.username_pw_set(MQTT_USERNAME, MQTT_PASSWORD)
             client.connect(MQTT_HOST, MQTT_PORT, keepalive=60)
             break
         except (ConnectionRefusedError, OSError) as e:

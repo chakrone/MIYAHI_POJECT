@@ -1,6 +1,6 @@
 package ma.miyahi.registry.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.*;
 import java.time.Instant;
 import java.util.UUID;

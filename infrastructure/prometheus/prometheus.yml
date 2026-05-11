@@ -1,0 +1,26 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  - job_name: "java_services"
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets:
+        - "api-gateway:8080"
+        - "ingestion-service:8081"
+        - "meter-registry-service:8082"
+        - "alert-service:8083"
+        - "billing-service:8084"
+
+  - job_name: "python_services"
+    metrics_path: '/metrics'
+    static_configs:
+      - targets:
+        - "anomaly-detection:8090"
+        - "forecasting:8091"
+        - "weather-service:8092"

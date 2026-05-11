@@ -98,6 +98,35 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: miyahi-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./infrastructure/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    restart: unless-stopped
+
+  loki:
+    image: grafana/loki:latest
+    container_name: miyahi-loki
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - loki-data:/tmp/loki
+    restart: unless-stopped
+
+  promtail:
+    image: grafana/promtail:latest
+    container_name: miyahi-promtail
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./infrastructure/promtail/config.yml:/etc/promtail/config.yml
+    command: -config.file=/etc/promtail/config.yml
+    restart: unless-stopped
+
   # ──────────────────────────────────────────────
   # JAVA SERVICES (Spring Boot)
   # ──────────────────────────────────────────────
@@ -140,6 +169,7 @@ services:
       - "8080:8080"
     environment:
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      JWT_SECRET: ${JWT_SECRET:-YOUR_SUPER_SECRET_KEY_WHICH_MUST_BE_AT_LEAST_32_BYTES_LONG_FOR_HMAC_SHA_256}
     depends_on:
       eureka-server:
         condition: service_healthy
@@ -159,6 +189,8 @@ services:
       SPRING_DATASOURCE_USERNAME: ${TS_USER:-miyahi}
       SPRING_DATASOURCE_PASSWORD: ${TS_PASSWORD:-miyahi_ts_dev_2026}
       MQTT_BROKER_URL: tcp://mosquitto:1883
+      MQTT_USERNAME: ${MQTT_USERNAME:-miyahi_backend}
+      MQTT_PASSWORD: ${MQTT_PASSWORD:-backend_secret_2026}
       SPRING_DATA_REDIS_HOST: redis
     depends_on:
       mosquitto:
@@ -321,3 +353,5 @@ volumes:
   postgres-data:
   redis-data:
   grafana-data:
+  prometheus-data:
+  loki-data:

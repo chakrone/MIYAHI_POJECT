@@ -17,6 +17,7 @@ import pandas as pd
 import httpx
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
+from prometheus_fastapi_instrumentator import Instrumentator
 from sqlalchemy import create_engine, text
 from apscheduler.schedulers.background import BackgroundScheduler
 
@@ -198,6 +199,7 @@ app = FastAPI(
     lifespan=lifespan
 )
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+Instrumentator().instrument(app).expose(app)
 
 
 @app.get("/api/weather/current")

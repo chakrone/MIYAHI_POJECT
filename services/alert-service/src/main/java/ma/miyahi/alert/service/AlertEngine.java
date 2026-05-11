@@ -45,6 +45,7 @@ public class AlertEngine {
      * Polls the Redis Stream every 2 seconds for new meter readings,
      * evaluates active alert rules, and persists triggered alerts.
      */
+    @SuppressWarnings("unchecked")
     @Scheduled(fixedDelay = 2000)
     public void processReadings() {
         try {

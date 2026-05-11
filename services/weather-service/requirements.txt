@@ -6,4 +6,5 @@ pandas
 psycopg[binary]
 sqlalchemy
 pydantic
+prometheus-fastapi-instrumentator
 apscheduler

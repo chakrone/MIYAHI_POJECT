@@ -6,3 +6,4 @@ scikit-learn
 psycopg[binary]
 sqlalchemy
 pydantic
+prometheus-fastapi-instrumentator

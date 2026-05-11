@@ -61,6 +61,7 @@ spring:
 
       default-filters:
         - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
+        - Authentication
 
 eureka:
   client:
@@ -73,7 +74,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,gateway
+        include: health,info,prometheus
   endpoint:
     gateway:
       enabled: true
@@ -83,3 +84,7 @@ management:
 logging:
   level:
     org.springframework.cloud.gateway: INFO
+
+# JWT Authentication
+jwt:
+  secret: ${JWT_SECRET:YOUR_SUPER_SECRET_KEY_WHICH_MUST_BE_AT_LEAST_32_BYTES_LONG_FOR_HMAC_SHA_256}

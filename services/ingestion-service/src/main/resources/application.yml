@@ -26,6 +26,8 @@ mqtt:
   broker:
     url: ${MQTT_BROKER_URL:tcp://localhost:1883}
     client-id: miyahi-ingestor
+    username: ${MQTT_USERNAME:miyahi_backend}
+    password: ${MQTT_PASSWORD:backend_secret_2026}
   topic: meters/+/data
   qos: 1
 
@@ -42,7 +44,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics
+        include: health,info,prometheus
   endpoint:
     health:
       show-details: always
