@@ -41,6 +41,4 @@ Thumbs.db
 data/
 
 #other
-implementation_plan.md
-IMPLEMENTATION_STEPS.md
-iot_water_monitoring_platform.md
+md-files/

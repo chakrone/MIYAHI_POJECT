@@ -15,17 +15,18 @@ services:
   # ──────────────────────────────────────────────
 
   mosquitto:
-    image: eclipse-mosquitto:2
+    build:
+      context: ./infrastructure/mosquitto
+      dockerfile: Dockerfile
     container_name: miyahi-mosquitto
     ports:
       - "1883:1883"
     volumes:
-      - ./infrastructure/mosquitto/config:/mosquitto/config
       - mosquitto-data:/mosquitto/data
       - mosquitto-log:/mosquitto/log
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "mosquitto_sub -t '$$SYS/#' -C 1 -u '' -P '' | grep -v Error || exit 1"]
+      test: ["CMD-SHELL", "mosquitto_pub -h localhost -u miyahi_backend -P backend_secret_2026 -t healthcheck -m ok || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -102,7 +103,7 @@ services:
     image: prom/prometheus:latest
     container_name: miyahi-prometheus
     ports:
-      - "9090:9090"
+      - "9099:9090"
     volumes:
       - ./infrastructure/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus-data:/prometheus
@@ -139,9 +140,10 @@ services:
     profiles: ["java", "all"]
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8761/actuator/health || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8761/actuator/health || exit 1"]
       interval: 15s
       timeout: 10s
+      start_period: 30s
       retries: 5
 
   config-server:
@@ -157,9 +159,10 @@ services:
     profiles: ["java", "all"]
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8888/actuator/health || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8888/actuator/health || exit 1"]
       interval: 15s
       timeout: 10s
+      start_period: 30s
       retries: 5
 
   api-gateway:
@@ -189,8 +192,8 @@ services:
       SPRING_DATASOURCE_USERNAME: ${TS_USER:-miyahi}
       SPRING_DATASOURCE_PASSWORD: ${TS_PASSWORD:-miyahi_ts_dev_2026}
       MQTT_BROKER_URL: tcp://mosquitto:1883
-      MQTT_USERNAME: ${MQTT_USERNAME:-miyahi_backend}
-      MQTT_PASSWORD: ${MQTT_PASSWORD:-backend_secret_2026}
+      MQTT_BROKER_USERNAME: ${MQTT_USERNAME:-miyahi_backend}
+      MQTT_BROKER_PASSWORD: ${MQTT_PASSWORD:-backend_secret_2026}
       SPRING_DATA_REDIS_HOST: redis
     depends_on:
       mosquitto:
@@ -277,11 +280,7 @@ services:
       - "8090:8090"
     environment:
       REDIS_HOST: redis
-      TIMESCALE_HOST: timescaledb
-      TIMESCALE_PORT: 5432
-      TIMESCALE_DB: ${TS_DB:-miyahi_ts}
-      TIMESCALE_USER: ${TS_USER:-miyahi}
-      TIMESCALE_PASSWORD: ${TS_PASSWORD:-miyahi_ts_dev_2026}
+      TIMESCALE_URL: postgresql+psycopg://${TS_USER:-miyahi}:${TS_PASSWORD:-miyahi_ts_dev_2026}@timescaledb:5432/${TS_DB:-miyahi_ts}
     depends_on:
       redis:
         condition: service_healthy
@@ -296,11 +295,7 @@ services:
     ports:
       - "8091:8091"
     environment:
-      TIMESCALE_HOST: timescaledb
-      TIMESCALE_PORT: 5432
-      TIMESCALE_DB: ${TS_DB:-miyahi_ts}
-      TIMESCALE_USER: ${TS_USER:-miyahi}
-      TIMESCALE_PASSWORD: ${TS_PASSWORD:-miyahi_ts_dev_2026}
+      TIMESCALE_URL: postgresql+psycopg://${TS_USER:-miyahi}:${TS_PASSWORD:-miyahi_ts_dev_2026}@timescaledb:5432/${TS_DB:-miyahi_ts}
     depends_on:
       timescaledb:
         condition: service_healthy
@@ -313,11 +308,7 @@ services:
     ports:
       - "8092:8092"
     environment:
-      TIMESCALE_HOST: timescaledb
-      TIMESCALE_PORT: 5432
-      TIMESCALE_DB: ${TS_DB:-miyahi_ts}
-      TIMESCALE_USER: ${TS_USER:-miyahi}
-      TIMESCALE_PASSWORD: ${TS_PASSWORD:-miyahi_ts_dev_2026}
+      TIMESCALE_URL: postgresql+psycopg://${TS_USER:-miyahi}:${TS_PASSWORD:-miyahi_ts_dev_2026}@timescaledb:5432/${TS_DB:-miyahi_ts}
       OWM_API_KEY: ${OWM_API_KEY:-your_api_key_here}
       OWM_CITY: ${OWM_CITY:-Casablanca}
       OWM_COUNTRY: ${OWM_COUNTRY:-MA}
@@ -337,6 +328,8 @@ services:
     environment:
       MQTT_HOST: mosquitto
       MQTT_PORT: 1883
+      MQTT_USERNAME: ${MQTT_USERNAME:-miyahi_backend}
+      MQTT_PASSWORD: ${MQTT_PASSWORD:-backend_secret_2026}
     depends_on:
       mosquitto:
         condition: service_healthy

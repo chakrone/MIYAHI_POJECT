@@ -33,19 +33,19 @@ spring:
 
         # --- Python: Anomaly Detection ---
         - id: anomaly-detection
-          uri: http://localhost:8090
+          uri: http://anomaly-detection:8090
           predicates:
             - Path=/api/anomalies/**
 
         # --- Python: Forecasting ---
         - id: forecasting
-          uri: http://localhost:8091
+          uri: http://forecasting:8091
           predicates:
             - Path=/api/forecast/**
 
         # --- Python: Weather Service ---
         - id: weather
-          uri: http://localhost:8092
+          uri: http://weather-service:8092
           predicates:
             - Path=/api/weather/**
 
