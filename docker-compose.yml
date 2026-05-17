@@ -2,10 +2,14 @@
 # MIYAHI IoT Water Monitoring Platform — Docker Compose
 # ============================================================
 # Usage:
-#   docker-compose up -d                  → Start all infrastructure
-#   docker-compose --profile java up -d   → Start infra + Java services
-#   docker-compose --profile python up -d → Start infra + Python services
-#   docker-compose --profile all up -d    → Start everything
+#   docker-compose up -d                       → Infrastructure only
+#   docker-compose --profile java up -d        → Infra + Java + Frontend
+#   docker-compose --profile python up -d      → Infra + Python services
+#   docker-compose --profile all up -d         → Everything (recommended)
+# ============================================================
+# Full stack (recommended):
+#   docker-compose --profile all up -d
+# Then open: http://localhost
 # ============================================================
 
 services:
@@ -334,6 +338,24 @@ services:
       mosquitto:
         condition: service_healthy
     profiles: ["simulator", "all"]
+    restart: unless-stopped
+
+  # ──────────────────────────────────────────────
+  # FRONTEND (React + Vite → nginx)
+  # ──────────────────────────────────────────────
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: http://localhost:8080/api
+    container_name: miyahi-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - api-gateway
+    profiles: ["java", "all"]
     restart: unless-stopped
 
 # ──────────────────────────────────────────────

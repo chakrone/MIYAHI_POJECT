@@ -7,7 +7,8 @@ import type {
 } from '../types';
 
 // All requests go through the API Gateway which proxies to all services
-const api = axios.create({ baseURL: 'http://localhost:8080/api' });
+// In Docker, VITE_API_URL is set at build time to point to the gateway
+const api = axios.create({ baseURL: import.meta.env.VITE_API_URL ?? 'http://localhost:8080/api' });
 
 /* ── Meters & Zones ── */
 export const getMeters = () => api.get<Meter[]>('/meters').then(r => r.data);
