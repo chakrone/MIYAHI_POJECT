@@ -1,5 +1,4 @@
 import { useCallback } from 'react';
-import { ShieldAlert } from 'lucide-react';
 import { usePolling } from '../../hooks/usePolling';
 import { getAnomalyStats, getAnomalies } from '../../services/api';
 import type { AnomalyFlag } from '../../types';
@@ -18,24 +17,21 @@ export default function AnomalyPanel({ meterId }: Props) {
     <div className="card">
       <div className="card__header">
         <span className="card__title">Anomaly Detection</span>
-        <div className="card__icon icon-rose"><ShieldAlert size={18} /></div>
       </div>
-      <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
-        <div className="weather-stat" style={{ flex: 1 }}>
-          <div className="weather-stat__value">{stats?.readings_processed ?? 0}</div>
-          <div className="weather-stat__label">Analyzed</div>
+      <div className="anomaly-stats">
+        <div className="anomaly-stat">
+          <div className="anomaly-stat__value" style={{ color: 'var(--blue-600)' }}>{stats?.readings_processed ?? 0}</div>
+          <div className="anomaly-stat__label">Analyzed</div>
         </div>
-        <div className="weather-stat" style={{ flex: 1 }}>
-          <div className="weather-stat__value" style={{ color: 'var(--rose-400)' }}>
-            {stats?.anomalies_detected ?? 0}
-          </div>
-          <div className="weather-stat__label">Detected</div>
+        <div className="anomaly-stat">
+          <div className="anomaly-stat__value" style={{ color: 'var(--rose-500)' }}>{stats?.anomalies_detected ?? 0}</div>
+          <div className="anomaly-stat__label">Detected</div>
         </div>
       </div>
-      <div style={{ maxHeight: 180, overflow: 'auto' }}>
+      <div style={{ maxHeight: 160, overflow: 'auto' }}>
         {list.length === 0 && <div className="empty-state">No anomalies in last 24h</div>}
         {list.slice(0, 5).map((a, i) => (
-          <div key={i} className="alert-item" style={{ marginBottom: 4 }}>
+          <div key={i} className="alert-item">
             <div className={`alert-item__dot ${a.severity === 'critical' ? 'alert-item__dot--critical' : 'alert-item__dot--warning'}`} />
             <div>
               <div className="alert-item__message">{a.description}</div>
