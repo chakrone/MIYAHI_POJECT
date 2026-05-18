@@ -1,31 +1,48 @@
 
+import { useCallback } from 'react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
 import { Lock, Maximize2 } from 'lucide-react';
+import { usePolling } from '../../hooks/usePolling';
+import { getReadings } from '../../services/api';
 
 
 interface Props { meterId: string; }
 
 export default function FlowChart({ meterId }: Props) {
-  void meterId; // satisfy TS for unused prop
+  const fetchReadings = useCallback(() => getReadings(meterId, '24h'), [meterId]);
+  const { data: readings } = usePolling(fetchReadings, 15000);
 
-  const hours = Array.from({ length: 24 }, (_, i) => {
-    const h = (6 + (i % 12)).toString().padStart(2, '0');
-    const minute = i < 12 ? '00' : '30';
-    const base = 1.5 + Math.sin(i * 0.5) * 2 + Math.random() * 1.5;
-    return { time: `${h}:${minute}`, flow: parseFloat(Math.max(0, base).toFixed(1)) };
-  });
+  // Bucket readings by hour
+  const chartData: { time: string; flow: number }[] = [];
+  if (readings && readings.length > 0) {
+    const buckets: Record<string, number[]> = {};
+    for (const r of readings) {
+      const h = new Date(r.time).getHours().toString().padStart(2, '0') + ':00';
+      if (!buckets[h]) buckets[h] = [];
+      buckets[h].push(r.flow_rate);
+    }
+    for (const [h, vals] of Object.entries(buckets).sort()) {
+      chartData.push({ time: h, flow: parseFloat((vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(1)) });
+    }
+  }
 
-  const avg = (hours.reduce((s, h) => s + h.flow, 0) / hours.length).toFixed(2);
-  const total = hours.reduce((s, h) => s + h.flow, 0).toFixed(2);
+  const avg = chartData.length > 0
+    ? (chartData.reduce((s, h) => s + h.flow, 0) / chartData.length).toFixed(2)
+    : '—';
+  const total = chartData.length > 0
+    ? chartData.reduce((s, h) => s + h.flow, 0).toFixed(2)
+    : '—';
 
   return (
     <div className="card">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
         <div>
           <div className="card__title">Flow</div>
-          <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>Realtime · last 12 hours</div>
+          <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>
+            {chartData.length > 0 ? 'Realtime · last 24 hours' : 'No data available'}
+          </div>
         </div>
         <div className="card__actions">
           <button title="Lock"><Lock size={13} /></button>
@@ -33,15 +50,21 @@ export default function FlowChart({ meterId }: Props) {
         </div>
       </div>
       <div className="chart-container">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={hours} barCategoryGap="15%">
-            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-            <XAxis dataKey="time" tick={{ fontSize: 10, fill: 'var(--text-muted)' }} tickLine={false} axisLine={{ stroke: 'var(--border)' }} interval={3} />
-            <YAxis tick={{ fontSize: 10, fill: 'var(--text-muted)' }} tickLine={false} axisLine={false} />
-            <Tooltip contentStyle={{ fontSize: 11, borderRadius: 4, border: '1px solid var(--border)' }} />
-            <Bar dataKey="flow" fill="#2563eb" radius={[2, 2, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
+        {chartData.length > 0 ? (
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={chartData} barCategoryGap="15%">
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+              <XAxis dataKey="time" tick={{ fontSize: 10, fill: 'var(--text-muted)' }} tickLine={false} axisLine={{ stroke: 'var(--border)' }} interval={3} />
+              <YAxis tick={{ fontSize: 10, fill: 'var(--text-muted)' }} tickLine={false} axisLine={false} />
+              <Tooltip contentStyle={{ fontSize: 11, borderRadius: 4, border: '1px solid var(--border)' }} />
+              <Bar dataKey="flow" fill="#2563eb" radius={[2, 2, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        ) : (
+          <div className="empty-state" style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            No flow data
+          </div>
+        )}
       </div>
       <div className="chart-footer">
         <div className="chart-legend">

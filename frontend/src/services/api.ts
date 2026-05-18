@@ -1,7 +1,7 @@
 /* ── MIYAHI API Client ── */
 import axios from 'axios';
 import type {
-  Meter, Zone, Alert, BillingResult, BillingConfig,
+  MeterReading, Meter, Zone, Alert, BillingResult, BillingConfig,
   AnomalyFlag, ForecastResult, WeatherData, WeatherCorrelation,
   ReadingsStats, ConservationGoal
 } from '../types';
@@ -16,6 +16,10 @@ export const getZones = () => api.get<Zone[]>('/zones').then(r => r.data);
 
 /* ── Readings ── */
 export const getReadingsStats = () => api.get<ReadingsStats>('/readings/stats').then(r => r.data);
+export const getReadings = (meterId: string, range = '1h') =>
+  api.get<MeterReading[]>(`/readings/${meterId}`, { params: { range } }).then(r => r.data);
+export const getLatestReading = (meterId: string) =>
+  api.get<MeterReading>(`/readings/${meterId}/latest`).then(r => r.data);
 
 /* ── Alerts ── */
 export const getAlerts = () => api.get<Alert[]>('/alerts').then(r => r.data);

@@ -1,48 +1,28 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Clock, Search, Download, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
+import { usePolling } from '../../hooks/usePolling';
+import { getReadings } from '../../services/api';
 
 interface Props { meterId: string; }
-
-interface Reading {
-  timestamp: string;
-  flow: number;
-  flowUnit: string;
-  velocity: number;
-  positiveCum: number;
-  negativeCum: number;
-  cumulativeTotal: number;
-  cumulativeUnit: string;
-}
-
-function generateReadings(meterId: string): Reading[] {
-  void meterId;
-  const rows: Reading[] = [];
-  const baseDate = new Date();
-  baseDate.setMinutes(0, 0, 0);
-  for (let i = 0; i < 96; i++) {
-    const ts = new Date(baseDate.getTime() - i * 15 * 60000);
-    const flow = +(1.5 + Math.random() * 3).toFixed(1);
-    const velocity = +(0.1 + Math.random() * 0.9).toFixed(1);
-    const cumBase = 11466.7 - i * 3.1;
-    rows.push({
-      timestamp: ts.toISOString().replace('T', ' ').substring(0, 19),
-      flow,
-      flowUnit: 'm3/h',
-      velocity,
-      positiveCum: +cumBase.toFixed(1),
-      negativeCum: 0.0,
-      cumulativeTotal: +cumBase.toFixed(1),
-      cumulativeUnit: 'm3',
-    });
-  }
-  return rows;
-}
 
 export default function ReadingsTable({ meterId }: Props) {
   const [page, setPage] = useState(0);
   const [perPage, setPerPage] = useState(10);
-  const readings = generateReadings(meterId);
-  const totalPages = Math.ceil(readings.length / perPage);
+  const fetchReadings = useCallback(() => getReadings(meterId, '24h'), [meterId]);
+  const { data: rawReadings } = usePolling(fetchReadings, 15000);
+
+  const readings = (rawReadings || []).map(r => ({
+    timestamp: new Date(r.time).toISOString().replace('T', ' ').substring(0, 19),
+    flow: r.flow_rate,
+    flowUnit: 'L/min',
+    velocity: parseFloat((r.flow_rate / 60 * 0.8).toFixed(1)),
+    positiveCum: r.volume,
+    negativeCum: 0.0,
+    cumulativeTotal: r.volume,
+    cumulativeUnit: 'm³',
+  }));
+
+  const totalPages = Math.max(1, Math.ceil(readings.length / perPage));
   const pageData = readings.slice(page * perPage, (page + 1) * perPage);
 
   return (
@@ -50,7 +30,7 @@ export default function ReadingsTable({ meterId }: Props) {
       <div className="data-table-header">
         <div className="data-table-header__title">
           <Clock size={14} />
-          Realtime · last day
+          {readings.length > 0 ? 'Realtime · last day' : 'No data available'}
         </div>
         <div className="card__actions">
           <button title="Search"><Search size={13} /></button>
@@ -72,6 +52,13 @@ export default function ReadingsTable({ meterId }: Props) {
             </tr>
           </thead>
           <tbody>
+            {pageData.length === 0 && (
+              <tr>
+                <td colSpan={8} style={{ textAlign: 'center', padding: '24px', color: 'var(--text-muted)' }}>
+                  No readings — start the simulator to generate data
+                </td>
+              </tr>
+            )}
             {pageData.map((r, i) => (
               <tr key={i}>
                 <td>{r.timestamp}</td>
@@ -94,7 +81,7 @@ export default function ReadingsTable({ meterId }: Props) {
           <option value={25}>25</option>
           <option value={50}>50</option>
         </select>
-        <span>{page * perPage + 1} – {Math.min((page + 1) * perPage, readings.length)} of {readings.length}</span>
+        <span>{readings.length > 0 ? `${page * perPage + 1} – ${Math.min((page + 1) * perPage, readings.length)} of ${readings.length}` : '0 items'}</span>
         <button disabled={page === 0} onClick={() => setPage(0)}><ChevronsLeft size={13} /></button>
         <button disabled={page === 0} onClick={() => setPage(p => p - 1)}><ChevronLeft size={13} /></button>
         <button disabled={page >= totalPages - 1} onClick={() => setPage(p => p + 1)}><ChevronRight size={13} /></button>
