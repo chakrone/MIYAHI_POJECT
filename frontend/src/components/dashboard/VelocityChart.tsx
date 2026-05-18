@@ -11,21 +11,22 @@ import { getReadings } from '../../services/api';
 interface Props { meterId: string; }
 
 export default function VelocityChart({ meterId }: Props) {
-  const fetchReadings = useCallback(() => getReadings(meterId, '24h'), [meterId]);
-  const { data: readings } = usePolling(fetchReadings, 15000);
+  const fetchReadings = useCallback(() => getReadings(meterId, '1h'), [meterId]);
+  const { data: readings } = usePolling(fetchReadings, 2000);
 
   // Convert readings to chart points — derive velocity from flow_rate
   const chartData: { time: string; velocity: number }[] = [];
   if (readings && readings.length > 0) {
-    // Bucket by hour
+    // Bucket by minute
     const buckets: Record<string, number[]> = {};
     for (const r of readings) {
-      const h = new Date(r.time).getHours().toString().padStart(2, '0') + ':00';
-      if (!buckets[h]) buckets[h] = [];
-      buckets[h].push(r.flow_rate / 60 * 0.8); // approximate velocity from flow
+      const date = new Date(r.time);
+      const m = date.getHours().toString().padStart(2, '0') + ':' + date.getMinutes().toString().padStart(2, '0');
+      if (!buckets[m]) buckets[m] = [];
+      buckets[m].push(r.flow_rate / 60 * 0.8); // approximate velocity from flow
     }
-    for (const [h, vals] of Object.entries(buckets).sort()) {
-      chartData.push({ time: h, velocity: parseFloat((vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(2)) });
+    for (const [m, vals] of Object.entries(buckets).sort()) {
+      chartData.push({ time: m, velocity: parseFloat((vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(2)) });
     }
   }
 

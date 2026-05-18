@@ -2,7 +2,9 @@
 MIYAHI IoT Water Meter Simulator — Main Entry Point
 
 Runs 5 virtual water meters, each publishing sensor readings to MQTT
-at a configurable interval. Designed to run on a Raspberry Pi or in Docker.
+at a configurable interval. On startup the simulator fetches the last
+known volume for each meter from TimescaleDB so simulation resumes
+from where it left off rather than from the hardcoded baseline.
 
 Usage:
     python -m app.main
@@ -32,6 +34,36 @@ from .config import (
     PUBLISH_INTERVAL_SEC,
 )
 from .meter_engine import MeterEngine
+
+
+# ──────────────────────────────────────────────
+# DB resume: fetch last known volume per meter
+# ──────────────────────────────────────────────
+def fetch_last_volumes() -> dict:
+    """Query TimescaleDB for the latest recorded volume per meter.
+    Returns a dict {meter_id: volume_m3}. Falls back to empty dict on error."""
+    ts_url = os.getenv(
+        "TIMESCALE_URL",
+        "postgresql+psycopg://miyahi:miyahi_ts_dev_2026@timescaledb:5432/miyahi_ts",
+    )
+    # Convert SQLAlchemy-style URL to psycopg3 conninfo
+    conninfo = ts_url.replace("postgresql+psycopg://", "postgresql://")
+    try:
+        import psycopg  # psycopg3
+        with psycopg.connect(conninfo, connect_timeout=5) as conn:
+            rows = conn.execute(
+                """
+                SELECT DISTINCT ON (meter_id) meter_id, volume
+                FROM meter_readings
+                ORDER BY meter_id, time DESC
+                """
+            ).fetchall()
+        result = {row[0]: row[1] for row in rows}
+        log(f"[DB] Resumed volumes for {len(result)} meters from TimescaleDB")
+        return result
+    except Exception as e:
+        log(f"[DB] Could not fetch last volumes ({e}), using config baselines")
+        return {}
 
 # Fix Windows console encoding for Unicode output
 if os.name == "nt":
@@ -159,11 +191,21 @@ def main():
     # Give MQTT a moment to establish
     time.sleep(1)
 
+    # Load last volumes from DB — if available use them, else fall back to profile defaults
+    last_volumes = fetch_last_volumes()
+
     # Create meter engines
-    engines = {
-        meter_id: MeterEngine(meter_id, profile)
-        for meter_id, profile in METER_PROFILES.items()
-    }
+    engines = {}
+    for meter_id, profile in METER_PROFILES.items():
+        if meter_id in last_volumes:
+            # Resume from last known DB value
+            override = dict(profile)
+            override["starting_volume"] = last_volumes[meter_id]
+            engines[meter_id] = MeterEngine(meter_id, override)
+            log(f"[RESUME] {meter_id} volume={last_volumes[meter_id]:.4f} m³ (from DB)")
+        else:
+            engines[meter_id] = MeterEngine(meter_id, profile)
+            log(f"[INIT]   {meter_id} volume={profile['starting_volume']:.4f} m³ (baseline)")
 
     # Stop event for graceful shutdown
     stop_event = threading.Event()

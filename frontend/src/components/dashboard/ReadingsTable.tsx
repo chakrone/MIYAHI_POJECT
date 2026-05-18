@@ -9,7 +9,7 @@ export default function ReadingsTable({ meterId }: Props) {
   const [page, setPage] = useState(0);
   const [perPage, setPerPage] = useState(10);
   const fetchReadings = useCallback(() => getReadings(meterId, '24h'), [meterId]);
-  const { data: rawReadings } = usePolling(fetchReadings, 15000);
+  const { data: rawReadings } = usePolling(fetchReadings, 2000);
 
   const readings = (rawReadings || []).map(r => ({
     timestamp: new Date(r.time).toISOString().replace('T', ' ').substring(0, 19),

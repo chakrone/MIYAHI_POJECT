@@ -21,8 +21,8 @@ MQTT_STATUS_TOPIC_TEMPLATE = "meters/{meter_id}/status"
 # ──────────────────────────────────────────────
 # Simulation Parameters
 # ──────────────────────────────────────────────
-PUBLISH_INTERVAL_SEC = int(os.getenv("PUBLISH_INTERVAL", "5"))  # seconds between readings
-ANOMALY_PROBABILITY = float(os.getenv("ANOMALY_PROBABILITY", "0.02"))  # 2% chance per tick
+PUBLISH_INTERVAL_SEC = float(os.getenv("PUBLISH_INTERVAL", "0.5"))  # seconds between readings
+ANOMALY_PROBABILITY = float(os.getenv("ANOMALY_PROBABILITY", "0.001"))  # 0.1% chance per tick
 
 # ──────────────────────────────────────────────
 # Meter Profiles

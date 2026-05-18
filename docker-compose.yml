@@ -120,7 +120,8 @@ services:
       - "3100:3100"
     command: -config.file=/etc/loki/local-config.yaml
     volumes:
-      - loki-data:/tmp/loki
+      - ./infrastructure/loki/local-config.yaml:/etc/loki/local-config.yaml
+      - loki-data:/loki
     restart: unless-stopped
 
   promtail:
@@ -334,8 +335,11 @@ services:
       MQTT_PORT: 1883
       MQTT_USERNAME: ${MQTT_USERNAME:-miyahi_backend}
       MQTT_PASSWORD: ${MQTT_PASSWORD:-backend_secret_2026}
+      TIMESCALE_URL: postgresql+psycopg://${TS_USER:-miyahi}:${TS_PASSWORD:-miyahi_ts_dev_2026}@timescaledb:5432/${TS_DB:-miyahi_ts}
     depends_on:
       mosquitto:
+        condition: service_healthy
+      timescaledb:
         condition: service_healthy
     profiles: ["simulator", "all"]
     restart: unless-stopped

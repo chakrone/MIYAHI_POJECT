@@ -195,6 +195,11 @@ app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], all
 Instrumentator().instrument(app).expose(app)
 
 
+@app.get("/api/anomalies/stats")
+def anomaly_stats():
+    return stats
+
+
 @app.get("/api/anomalies/{meter_id}")
 def get_anomalies(
     meter_id: str,
@@ -228,11 +233,6 @@ def get_anomalies(
         ]
     except Exception as e:
         return {"error": str(e)}
-
-
-@app.get("/api/anomalies/stats")
-def anomaly_stats():
-    return stats
 
 
 @app.get("/health")

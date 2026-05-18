@@ -8,8 +8,8 @@ interface Props { meterId: string; }
 export default function WeatherPanel({ meterId }: Props) {
   const fetchWeather = useCallback(() => getCurrentWeather(), []);
   const fetchCorrelation = useCallback(() => getWeatherCorrelation(meterId, '7d'), [meterId]);
-  const { data: weather } = usePolling(fetchWeather, 30000);
-  const { data: correlation } = usePolling(fetchCorrelation, 60000);
+  const { data: weather } = usePolling(fetchWeather, 5000);
+  const { data: correlation } = usePolling(fetchCorrelation, 5000);
 
   return (
     <div className="card">

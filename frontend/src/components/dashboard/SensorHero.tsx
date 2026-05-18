@@ -13,8 +13,8 @@ interface Props { meterId: string; }
 export default function SensorHero({ meterId }: Props) {
   const fetchReadings = useCallback(() => getReadings(meterId, '24h'), [meterId]);
   const fetchLatest = useCallback(() => getLatestReading(meterId), [meterId]);
-  const { data: readings } = usePolling(fetchReadings, 15000);
-  const { data: latest } = usePolling(fetchLatest, 5000);
+  const { data: readings } = usePolling(fetchReadings, 2000);
+  const { data: latest } = usePolling(fetchLatest, 1000);
 
   const velocity = latest ? (latest.flow_rate / 60 * 0.8) : 0;
   const flow = latest?.flow_rate ?? 0;
@@ -39,10 +39,6 @@ export default function SensorHero({ meterId }: Props) {
 
   return (
     <div className="sensor-hero">
-      {/* Sensor Image */}
-      <div className="sensor-image-card">
-        <img src="/images/water-meter.png" alt="Water Flow Meter Sensor" />
-      </div>
 
       {/* Live Metrics */}
       <div className="live-metrics">

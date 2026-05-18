@@ -5,7 +5,7 @@ import { getAlerts, acknowledgeAlert } from '../../services/api';
 
 export default function AlertFeed() {
   const fetchAlerts = useCallback(() => getAlerts(), []);
-  const { data: alerts, refresh } = usePolling(fetchAlerts, 6000);
+  const { data: alerts, refresh } = usePolling(fetchAlerts, 2000);
 
   const handleAck = async (id: string) => {
     try { await acknowledgeAlert(id); refresh(); } catch { /* silent */ }

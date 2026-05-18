@@ -11,20 +11,21 @@ import { getReadings } from '../../services/api';
 interface Props { meterId: string; }
 
 export default function FlowChart({ meterId }: Props) {
-  const fetchReadings = useCallback(() => getReadings(meterId, '24h'), [meterId]);
-  const { data: readings } = usePolling(fetchReadings, 15000);
+  const fetchReadings = useCallback(() => getReadings(meterId, '1h'), [meterId]);
+  const { data: readings } = usePolling(fetchReadings, 2000);
 
-  // Bucket readings by hour
+  // Bucket readings by minute
   const chartData: { time: string; flow: number }[] = [];
   if (readings && readings.length > 0) {
     const buckets: Record<string, number[]> = {};
     for (const r of readings) {
-      const h = new Date(r.time).getHours().toString().padStart(2, '0') + ':00';
-      if (!buckets[h]) buckets[h] = [];
-      buckets[h].push(r.flow_rate);
+      const date = new Date(r.time);
+      const m = date.getHours().toString().padStart(2, '0') + ':' + date.getMinutes().toString().padStart(2, '0');
+      if (!buckets[m]) buckets[m] = [];
+      buckets[m].push(r.flow_rate);
     }
-    for (const [h, vals] of Object.entries(buckets).sort()) {
-      chartData.push({ time: h, flow: parseFloat((vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(1)) });
+    for (const [m, vals] of Object.entries(buckets).sort()) {
+      chartData.push({ time: m, flow: parseFloat((vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(1)) });
     }
   }
 

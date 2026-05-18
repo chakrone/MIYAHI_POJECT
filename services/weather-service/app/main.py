@@ -126,44 +126,44 @@ def compute_correlation(meter_id: str, days: int) -> dict:
         # Hourly weather
         weather_df = pd.DataFrame(
             conn.execute(text("""
-                SELECT time_bucket('1 hour', time) AS hour,
+                SELECT time_bucket('1 minute', time) AS time_bucket,
                        AVG(temperature) AS temp,
                        AVG(humidity) AS humidity,
                        SUM(rainfall_mm) AS rainfall
                 FROM weather_data
                 WHERE location = :location AND time > :since
-                GROUP BY hour ORDER BY hour
+                GROUP BY time_bucket ORDER BY time_bucket
             """), {"location": LOCATION, "since": since}).fetchall(),
-            columns=["hour", "temp", "humidity", "rainfall"]
+            columns=["time_bucket", "temp", "humidity", "rainfall"]
         )
 
         # Hourly consumption
         consumption_df = pd.DataFrame(
             conn.execute(text("""
-                SELECT time_bucket('1 hour', time) AS hour,
+                SELECT time_bucket('1 minute', time) AS time_bucket,
                        AVG(flow_rate) AS avg_flow
                 FROM meter_readings
                 WHERE meter_id = :meter_id AND time > :since
-                GROUP BY hour ORDER BY hour
+                GROUP BY time_bucket ORDER BY time_bucket
             """), {"meter_id": meter_id, "since": since}).fetchall(),
-            columns=["hour", "avg_flow"]
+            columns=["time_bucket", "avg_flow"]
         )
 
     if weather_df.empty or consumption_df.empty:
         return {"error": "Insufficient data for correlation"}
 
-    # Merge on hour
-    weather_df["hour"] = pd.to_datetime(weather_df["hour"], utc=True)
-    consumption_df["hour"] = pd.to_datetime(consumption_df["hour"], utc=True)
-    merged = pd.merge(weather_df, consumption_df, on="hour", how="inner")
+    # Merge on time_bucket
+    weather_df["time_bucket"] = pd.to_datetime(weather_df["time_bucket"], utc=True)
+    consumption_df["time_bucket"] = pd.to_datetime(consumption_df["time_bucket"], utc=True)
+    merged = pd.merge(weather_df, consumption_df, on="time_bucket", how="inner")
 
-    if len(merged) < 10:
-        return {"error": f"Only {len(merged)} overlapping hours — need at least 10"}
+    if len(merged) < 3:
+        return {"error": f"Only {len(merged)} overlapping minutes — need at least 3"}
 
     correlations = {}
     for col in ["temp", "humidity", "rainfall"]:
         vals = merged[[col, "avg_flow"]].dropna()
-        if len(vals) >= 10:
+        if len(vals) >= 3:
             corr = float(np.corrcoef(vals[col].values, vals["avg_flow"].values)[0, 1])
             correlations[col] = round(corr, 4)
 
@@ -183,8 +183,8 @@ def compute_correlation(meter_id: str, days: int) -> dict:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Poll weather every hour
-    scheduler.add_job(poll_weather, "interval", hours=1)
+    # Poll weather every minute
+    scheduler.add_job(poll_weather, "interval", minutes=1)
     # Also poll immediately
     scheduler.add_job(poll_weather, "date",
                       run_date=datetime.now() + timedelta(seconds=5))
