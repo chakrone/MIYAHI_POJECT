@@ -53,10 +53,22 @@ public class AuthenticationGatewayFilterFactory extends AbstractGatewayFilterFac
     }
 
     private boolean isSecured(ServerHttpRequest request) {
+        if (request.getMethod() != null && request.getMethod().name().equals("OPTIONS")) {
+            return false;
+        }
+
         final List<String> openApiEndpoints = List.of(
                 "/api/auth/register",
                 "/api/auth/login",
-                "/eureka"
+                "/eureka",
+                "/api/billing",
+                "/api/weather",
+                "/api/meters",
+                "/api/zones",
+                "/api/readings",
+                "/api/alerts",
+                "/api/anomalies",
+                "/api/forecast"
         );
         String path = request.getURI().getPath();
         return openApiEndpoints.stream().noneMatch(path::contains);
