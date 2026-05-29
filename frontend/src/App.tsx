@@ -9,6 +9,7 @@ import AlertFeed from './components/dashboard/AlertFeed';
 import WeatherPanel from './components/dashboard/WeatherPanel';
 import BillingCard from './components/dashboard/BillingCard';
 import AnomalyPanel from './components/dashboard/AnomalyPanel';
+import ChatWidget from './components/dashboard/ChatWidget';
 
 function App() {
   const [selectedMeter, setSelectedMeter] = useState('meter_001');
@@ -92,6 +93,9 @@ function App() {
           <AnomalyPanel meterId={selectedMeter} />
         </div>
       </main>
+
+      {/* Floating Chat Assistant */}
+      <ChatWidget meterId={selectedMeter} />
     </>
   );
 }

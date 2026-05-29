@@ -13,24 +13,29 @@ export default function ReadingsTable({ meterId }: Props) {
 
   const readings = (rawReadings || []).map(r => ({
     timestamp: new Date(r.time).toISOString().replace('T', ' ').substring(0, 19),
-    flow: r.flow_rate,
-    flowUnit: 'L/min',
-    velocity: parseFloat((r.flow_rate / 60 * 0.8).toFixed(1)),
-    positiveCum: r.volume,
-    negativeCum: 0.0,
-    cumulativeTotal: r.volume,
-    cumulativeUnit: 'm³',
+    flowRate: r.flow_rate,
+    pressure: r.pressure,
+    temperature: r.temperature,
+    volume: r.volume,
+    status: r.status,
   }));
 
   const totalPages = Math.max(1, Math.ceil(readings.length / perPage));
   const pageData = readings.slice(page * perPage, (page + 1) * perPage);
+
+  const statusBadge = (status: string) => {
+    if (status === 'ok') return <span className="status-badge status-badge--ok">OK</span>;
+    if (status === 'leak_suspected') return <span className="status-badge status-badge--critical">Leak</span>;
+    if (status === 'low_pressure') return <span className="status-badge status-badge--warning">Low Press.</span>;
+    return <span className="status-badge">{status}</span>;
+  };
 
   return (
     <div className="card data-table-card" style={{ padding: 0 }}>
       <div className="data-table-header">
         <div className="data-table-header__title">
           <Clock size={14} />
-          {readings.length > 0 ? 'Realtime · last day' : 'No data available'}
+          {readings.length > 0 ? 'Sensor Readings · last 24h' : 'No data available'}
         </div>
         <div className="card__actions">
           <button title="Search"><Search size={13} /></button>
@@ -42,19 +47,17 @@ export default function ReadingsTable({ meterId }: Props) {
           <thead>
             <tr>
               <th>Timestamp <ChevronDown size={10} /></th>
-              <th>Flow</th>
-              <th>Flow unit</th>
-              <th>Velocity</th>
-              <th>Positive Cumulative</th>
-              <th>Negative Cumulative</th>
-              <th>Cumulative Total</th>
-              <th>Cumulative Unit</th>
+              <th>Flow Rate</th>
+              <th>Pressure</th>
+              <th>Temperature</th>
+              <th>Volume</th>
+              <th>Status</th>
             </tr>
           </thead>
           <tbody>
             {pageData.length === 0 && (
               <tr>
-                <td colSpan={8} style={{ textAlign: 'center', padding: '24px', color: 'var(--text-muted)' }}>
+                <td colSpan={6} style={{ textAlign: 'center', padding: '24px', color: 'var(--text-muted)' }}>
                   No readings — start the simulator to generate data
                 </td>
               </tr>
@@ -62,13 +65,11 @@ export default function ReadingsTable({ meterId }: Props) {
             {pageData.map((r, i) => (
               <tr key={i}>
                 <td>{r.timestamp}</td>
-                <td>{r.flow}</td>
-                <td>{r.flowUnit}</td>
-                <td>{r.velocity} m/s</td>
-                <td>{r.positiveCum}</td>
-                <td>{r.negativeCum}</td>
-                <td>{r.cumulativeTotal}</td>
-                <td>{r.cumulativeUnit}</td>
+                <td>{r.flowRate.toFixed(1)} <span className="unit-label">L/min</span></td>
+                <td>{r.pressure.toFixed(2)} <span className="unit-label">bar</span></td>
+                <td>{r.temperature.toFixed(1)} <span className="unit-label">°C</span></td>
+                <td>{r.volume.toFixed(2)} <span className="unit-label">m³</span></td>
+                <td>{statusBadge(r.status)}</td>
               </tr>
             ))}
           </tbody>
@@ -90,3 +91,4 @@ export default function ReadingsTable({ meterId }: Props) {
     </div>
   );
 }
+

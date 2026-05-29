@@ -51,3 +51,11 @@ export const getWeatherHistory = (hours = 24) =>
 export const getWeatherCorrelation = (meterId: string, range = '7d') =>
   api.get<WeatherCorrelation>(`/weather/correlation/${meterId}`, { params: { range } }).then(r => r.data);
 
+/* ── Chatbot ── */
+export interface ChatMessage { role: 'user' | 'assistant'; content: string; }
+export interface ChatRequest { message: string; meter_id?: string; history?: ChatMessage[]; }
+export interface ChatResponse { reply: string; sources?: string[]; suggestions?: string[]; }
+
+export const sendChatMessage = (req: ChatRequest) =>
+  api.post<ChatResponse>('/chat', req).then(r => r.data);
+

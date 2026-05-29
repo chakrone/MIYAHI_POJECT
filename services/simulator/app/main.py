@@ -115,6 +115,36 @@ def on_publish(client, userdata, mid):
 
 
 # ──────────────────────────────────────────────
+# Reusable MQTT client factory
+# ──────────────────────────────────────────────
+def create_mqtt_client(client_id: str = "miyahi-simulator") -> mqtt.Client:
+    """Create, configure, and connect an MQTT client with retry logic."""
+    client = mqtt.Client(client_id=client_id, clean_session=True)
+    client.on_connect = on_connect
+    client.on_disconnect = on_disconnect
+    client.on_publish = on_publish
+
+    max_retries = 10
+    for attempt in range(1, max_retries + 1):
+        try:
+            log(f"[CONN] Connecting to broker (attempt {attempt}/{max_retries})...")
+            if MQTT_USERNAME and MQTT_PASSWORD:
+                client.username_pw_set(MQTT_USERNAME, MQTT_PASSWORD)
+            client.connect(MQTT_HOST, MQTT_PORT, keepalive=60)
+            break
+        except (ConnectionRefusedError, OSError) as e:
+            if attempt == max_retries:
+                log(f"[ERROR] Could not connect after {max_retries} attempts: {e}")
+                sys.exit(1)
+            log("[WAIT] Broker not ready, retrying in 3s...")
+            time.sleep(3)
+
+    client.loop_start()
+    time.sleep(1)  # Give MQTT a moment to establish
+    return client
+
+
+# ──────────────────────────────────────────────
 # Meter runner (one per thread)
 # ──────────────────────────────────────────────
 def run_meter(client: mqtt.Client, engine: MeterEngine, stop_event: threading.Event):
@@ -153,6 +183,54 @@ def run_meter(client: mqtt.Client, engine: MeterEngine, stop_event: threading.Ev
     log(f"[STOP] Meter {meter_id} stopped")
 
 
+def run_single_meter(meter_id: str, interval: float = None, anomaly_rate: float = None):
+    """Start a single meter in the foreground. Used by meter_ctl.py."""
+    from .config import ANOMALY_PROBABILITY as default_anomaly
+
+    if meter_id not in METER_PROFILES:
+        log(f"[ERROR] Unknown meter '{meter_id}'. Available: {list(METER_PROFILES.keys())}")
+        sys.exit(1)
+
+    profile = dict(METER_PROFILES[meter_id])
+
+    # Override interval if provided
+    if interval is not None:
+        import app.config as cfg
+        cfg.PUBLISH_INTERVAL_SEC = interval
+
+    # Override anomaly rate if provided
+    if anomaly_rate is not None:
+        import app.config as cfg
+        cfg.ANOMALY_PROBABILITY = anomaly_rate
+
+    # Resume volume from DB if possible
+    last_volumes = fetch_last_volumes()
+    if meter_id in last_volumes:
+        profile["starting_volume"] = last_volumes[meter_id]
+        log(f"[RESUME] {meter_id} volume={last_volumes[meter_id]:.4f} m³ (from DB)")
+    else:
+        log(f"[INIT]   {meter_id} volume={profile['starting_volume']:.4f} m³ (baseline)")
+
+    engine = MeterEngine(meter_id, profile)
+    client = create_mqtt_client(client_id=f"miyahi-ctl-{meter_id}")
+
+    stop_event = threading.Event()
+
+    def shutdown_handler(signum, frame):
+        log(f"\n[STOP] Shutdown signal for {meter_id}")
+        stop_event.set()
+
+    signal.signal(signal.SIGINT, shutdown_handler)
+    signal.signal(signal.SIGTERM, shutdown_handler)
+
+    log(f"[START] {meter_id} ({profile['label']} - {profile['zone']})")
+    run_meter(client, engine, stop_event)
+
+    client.loop_stop()
+    client.disconnect()
+    log(f"[DONE] {meter_id} stopped cleanly.")
+
+
 # ──────────────────────────────────────────────
 # Main
 # ──────────────────────────────────────────────
@@ -164,32 +242,8 @@ def main():
     log(f"   Interval: {PUBLISH_INTERVAL_SEC}s")
     log("=" * 60)
 
-    # Create MQTT client
-    client = mqtt.Client(client_id="miyahi-simulator", clean_session=True)
-    client.on_connect = on_connect
-    client.on_disconnect = on_disconnect
-    client.on_publish = on_publish
-
-    # Connect with retry
-    max_retries = 10
-    for attempt in range(1, max_retries + 1):
-        try:
-            log(f"[CONN] Connecting to broker (attempt {attempt}/{max_retries})...")
-            if MQTT_USERNAME and MQTT_PASSWORD:
-                client.username_pw_set(MQTT_USERNAME, MQTT_PASSWORD)
-            client.connect(MQTT_HOST, MQTT_PORT, keepalive=60)
-            break
-        except (ConnectionRefusedError, OSError) as e:
-            if attempt == max_retries:
-                log(f"[ERROR] Could not connect after {max_retries} attempts: {e}")
-                sys.exit(1)
-            log("[WAIT] Broker not ready, retrying in 3s...")
-            time.sleep(3)
-
-    client.loop_start()
-
-    # Give MQTT a moment to establish
-    time.sleep(1)
+    # Create MQTT client (uses shared factory with retry)
+    client = create_mqtt_client(client_id="miyahi-simulator")
 
     # Load last volumes from DB — if available use them, else fall back to profile defaults
     last_volumes = fetch_last_volumes()

@@ -323,6 +323,23 @@ services:
     profiles: ["python", "all"]
     restart: unless-stopped
 
+  chatbot-service:
+    build: ./services/chatbot-service
+    container_name: miyahi-chatbot
+    ports:
+      - "8093:8093"
+    environment:
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      INGESTION_URL: http://ingestion-service:8081
+      METER_REGISTRY_URL: http://meter-registry-service:8082
+      ALERT_URL: http://alert-service:8083
+      BILLING_URL: http://billing-service:8084
+      ANOMALY_URL: http://anomaly-detection:8090
+      FORECAST_URL: http://forecasting:8091
+      WEATHER_URL: http://weather-service:8092
+    profiles: ["python", "all"]
+    restart: unless-stopped
+
   # ──────────────────────────────────────────────
   # SIMULATOR (run on-demand)
   # ──────────────────────────────────────────────

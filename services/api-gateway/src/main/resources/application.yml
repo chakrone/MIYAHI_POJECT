@@ -49,6 +49,12 @@ spring:
           predicates:
             - Path=/api/weather/**
 
+        # --- Python: Chatbot Service ---
+        - id: chatbot
+          uri: http://chatbot-service:8093
+          predicates:
+            - Path=/api/chat/**
+
       globalcors:
         cors-configurations:
           '[/**]':

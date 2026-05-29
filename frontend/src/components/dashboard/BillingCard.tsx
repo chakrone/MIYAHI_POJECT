@@ -32,10 +32,10 @@ export default function BillingCard() {
     return (
       <div className="card">
         <div className="card__header">
-          <span className="card__title">Estimated Bill (24h)</span>
+          <span className="card__title">Estimated Daily Bill</span>
         </div>
         <div className="billing-total">0.00</div>
-        <div className="billing-currency">MAD · 0 m³ today</div>
+        <div className="billing-currency">MAD · No consumption recorded today</div>
         <div className="empty-state" style={{ marginTop: 8 }}>No consumption data</div>
       </div>
     );
@@ -44,14 +44,14 @@ export default function BillingCard() {
   return (
     <div className="card">
       <div className="card__header">
-        <span className="card__title">Estimated Bill (24h)</span>
+        <span className="card__title">Estimated Daily Bill</span>
       </div>
       {loading || !bill ? (
         <div className="loading"><div className="loading-spinner" /> Calculating...</div>
       ) : (
         <>
           <div className="billing-total">{bill.total.toFixed(2)}</div>
-          <div className="billing-currency">{bill.currency} · {consumedM3.toFixed(3)} m³ consumed</div>
+          <div className="billing-currency">{bill.currency} · Today's consumption: {consumedM3.toFixed(3)} m³</div>
           {bill.breakdown?.map((t, i) => (
             <div className="billing-tier" key={i}>
               <span className="billing-tier__name">{t.tier}</span>

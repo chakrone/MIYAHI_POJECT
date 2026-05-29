@@ -68,7 +68,8 @@ public class AuthenticationGatewayFilterFactory extends AbstractGatewayFilterFac
                 "/api/readings",
                 "/api/alerts",
                 "/api/anomalies",
-                "/api/forecast"
+                "/api/forecast",
+                "/api/chat"
         );
         String path = request.getURI().getPath();
         return openApiEndpoints.stream().noneMatch(path::contains);

@@ -43,7 +43,7 @@ export default function VelocityChart({ meterId }: Props) {
         <div>
           <div className="card__title">Velocity</div>
           <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>
-            {chartData.length > 0 ? 'Realtime · last 24 hours' : 'No data available'}
+            {chartData.length > 0 ? 'Live · Last hour' : 'No data available'}
           </div>
         </div>
         <div className="card__actions">
