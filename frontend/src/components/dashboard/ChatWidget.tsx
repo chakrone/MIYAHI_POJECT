@@ -1,7 +1,47 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, type ReactNode } from 'react';
 import { MessageCircle, X, Send, Bot, User, Sparkles } from 'lucide-react';
 import { sendChatMessage } from '../../services/api';
 import type { ChatMessage, ChatResponse } from '../../services/api';
+
+/** Lightweight markdown → React renderer. Handles the patterns used in FAQ/LLM replies. */
+function renderMarkdown(text: string): ReactNode {
+  const lines = text.split('\n');
+  const result: ReactNode[] = [];
+
+  const inlineFormat = (raw: string, key: number): ReactNode => {
+    // Split on **bold**, *italic*, `code`
+    const parts = raw.split(/(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/);
+    return (
+      <span key={key}>
+        {parts.map((p, i) => {
+          if (p.startsWith('**') && p.endsWith('**'))
+            return <strong key={i}>{p.slice(2, -2)}</strong>;
+          if (p.startsWith('*') && p.endsWith('*'))
+            return <em key={i}>{p.slice(1, -1)}</em>;
+          if (p.startsWith('`') && p.endsWith('`'))
+            return <code key={i} style={{ background: 'rgba(255,255,255,0.12)', borderRadius: 3, padding: '1px 4px', fontSize: '0.85em', fontFamily: 'monospace' }}>{p.slice(1, -1)}</code>;
+          return p;
+        })}
+      </span>
+    );
+  };
+
+  lines.forEach((line, idx) => {
+    const bulletMatch = line.match(/^[-•🔹]\s+(.*)/);
+    const numberedMatch = line.match(/^\d+\.\s+(.*)/);
+    if (bulletMatch) {
+      result.push(<div key={idx} style={{ display: 'flex', gap: 6, marginTop: 2 }}><span style={{ opacity: 0.6, flexShrink: 0 }}>•</span>{inlineFormat(bulletMatch[1], idx)}</div>);
+    } else if (numberedMatch) {
+      result.push(<div key={idx} style={{ display: 'flex', gap: 6, marginTop: 2 }}><span style={{ opacity: 0.6, flexShrink: 0 }}>{line.match(/^(\d+\.)/)?.[1]}</span>{inlineFormat(numberedMatch[1], idx)}</div>);
+    } else if (line.trim() === '') {
+      result.push(<div key={idx} style={{ height: 6 }} />);
+    } else {
+      result.push(<div key={idx}>{inlineFormat(line, idx)}</div>);
+    }
+  });
+
+  return <>{result}</>;
+}
 
 interface Props {
   meterId: string;
@@ -80,9 +120,12 @@ export default function ChatWidget({ meterId }: Props) {
       }
     } catch (err: any) {
       console.error('Chat error:', err);
+      const isNetworkError = !err?.response;
       const errorMsg: DisplayMessage = {
         role: 'assistant',
-        content: `Sorry, I couldn't connect to the chatbot service. Error: ${err?.message || 'Unknown error'}. Make sure the service is running and try again.`,
+        content: isNetworkError
+          ? `I couldn't reach the chatbot service. Please make sure it's running (port 8093) and try again.`
+          : `Sorry, something went wrong: ${err?.response?.data?.detail || err?.message || 'Unknown error'}. Please try again.`,
         timestamp: new Date(),
       };
       setMessages(prev => [...prev, errorMsg]);
@@ -165,7 +208,9 @@ export default function ChatWidget({ meterId }: Props) {
                   {msg.role === 'assistant' ? <Bot size={14} /> : <User size={14} />}
                 </div>
                 <div className="chat-message__content">
-                  <div className="chat-message__text">{msg.content}</div>
+                  <div className="chat-message__text">
+                    {msg.role === 'assistant' ? renderMarkdown(msg.content) : msg.content}
+                  </div>
                   <div className="chat-message__time">{formatTime(msg.timestamp)}</div>
                 </div>
               </div>

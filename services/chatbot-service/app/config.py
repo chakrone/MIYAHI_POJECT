@@ -12,6 +12,16 @@ import os
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
 
+# Fallback model chain — tried in order when the primary model is rate-limited
+FALLBACK_MODELS = [
+    "gemini-2.0-flash-lite",
+    "gemini-2.5-flash",
+]
+
+# Retry configuration for 429 rate-limit errors
+MAX_RETRIES = 2          # retries per model before trying next fallback
+RETRY_BASE_DELAY = 2.0   # seconds, doubles each retry (exponential backoff)
+
 # ──────────────────────────────────────────────
 # Internal Service URLs (direct container access, bypasses gateway/JWT)
 # ──────────────────────────────────────────────

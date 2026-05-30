@@ -132,6 +132,54 @@ FAQ_ENTRIES = [
             "Check the **Weather & Correlation** panel for current readings and correlations."
         ),
     },
+    {
+        "keywords": ["hello", "hi", "hey", "good morning", "good evening", "good afternoon", "greetings", "howdy", "bonjour", "salut", "salam"],
+        "answer": (
+            "👋 **Hello! I'm MIYAHI Assistant.**\n\n"
+            "I can help you with:\n"
+            "- 💧 **Water consumption** — check usage for any meter\n"
+            "- 💰 **Billing** — estimated costs and tier breakdowns\n"
+            "- ⚠️ **Anomalies & Alerts** — detected issues and troubleshooting\n"
+            "- 🌤️ **Weather** — correlation with water usage\n"
+            "- 📈 **Forecasts** — predicted consumption\n"
+            "- ⚙️ **Platform help** — adding meters, configuring alerts\n\n"
+            "Try asking: *\"How much water did I use today?\"* or *\"What's my estimated bill?\"*"
+        ),
+    },
+    {
+        "keywords": ["help", "what can you do", "features", "capabilities", "options", "menu"],
+        "answer": (
+            "**Here's what I can help you with:**\n\n"
+            "🔹 **Consumption** — \"How much water did meter_001 use today?\"\n"
+            "🔹 **Billing** — \"What's my estimated bill?\" or \"Explain billing tiers\"\n"
+            "🔹 **Anomalies** — \"Any anomalies detected?\" or \"What does leak_suspected mean?\"\n"
+            "🔹 **Alerts** — \"Are there any active alerts?\" or \"How to configure alert rules?\"\n"
+            "🔹 **Forecasts** — \"What's the consumption forecast?\"\n"
+            "🔹 **Weather** — \"How does weather affect water usage?\"\n"
+            "🔹 **Meters** — \"How do I add a new meter?\"\n\n"
+            "Just type your question and I'll do my best to help!"
+        ),
+    },
+    {
+        "keywords": ["status", "system status", "platform status", "is everything working", "health"],
+        "answer": (
+            "**Platform Status Check:**\n\n"
+            "To see the current system status, check the dashboard at `http://localhost`.\n\n"
+            "Key indicators:\n"
+            "- **Pipeline status** — shown in the Readings Stats section\n"
+            "- **Active meters** — listed in the meter dropdown\n"
+            "- **Alert feed** — shows any unacknowledged alerts\n"
+            "- **Anomaly panel** — shows readings scanned and issues found\n\n"
+            "If services appear down, try: `docker compose ps` to check container status."
+        ),
+    },
+    {
+        "keywords": ["thank", "thanks", "merci", "shukran", "appreciate"],
+        "answer": (
+            "You're welcome! 😊 Feel free to ask if you have any other questions about "
+            "your water consumption, billing, or the MIYAHI platform. I'm here to help!"
+        ),
+    },
 ]
 
 

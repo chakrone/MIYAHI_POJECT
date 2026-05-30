@@ -1,7 +1,7 @@
 /* ══════════════════════════════════════════════════════════
    MIYAHI — Water Flow Monitoring Dashboard
    ══════════════════════════════════════════════════════════ */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,500;1,600&display=swap');
 
 :root {
   --green-700: #15603d;
@@ -597,14 +597,23 @@ body {
 .chat-message__text {
   padding: 10px 14px;
   border-radius: 16px;
-  font-size: 13px; line-height: 1.5;
-  white-space: pre-wrap; word-break: break-word;
+  font-size: 13px; line-height: 1.6;
+  word-break: break-word;
 }
 .chat-message--assistant .chat-message__text {
   background: var(--bg-muted);
   border: 1px solid var(--border-light);
   border-top-left-radius: 4px;
   color: var(--text-primary);
+}
+.chat-message__text strong { font-weight: 700; }
+.chat-message__text em { font-style: italic; }
+.chat-message__text code {
+  background: rgba(0,0,0,0.06);
+  border-radius: 3px;
+  padding: 1px 5px;
+  font-size: 0.85em;
+  font-family: 'Courier New', Courier, monospace;
 }
 .chat-message--user .chat-message__text {
   background: linear-gradient(135deg, var(--green-600), var(--green-500));
