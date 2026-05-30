@@ -101,6 +101,14 @@ body {
   margin: 0 auto;
 }
 
+/* ── Row 1: Conservation Goals | Live Metrics | Hourly Consumption ── */
+.row-1-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+  align-items: stretch;
+}
+
 /* ── Card ── */
 .card {
   background: var(--bg-card);
@@ -128,12 +136,20 @@ body {
 }
 .card__actions button:hover { background: var(--bg-muted); color: var(--text-primary); }
 
-/* ── Sensor Hero Section ── */
+/* ── Sensor Hero Section (legacy, kept for reference) ── */
 .sensor-hero {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   gap: 16px;
   margin-bottom: 20px;
+}
+
+/* ── Hero Metrics Stack (middle column of row-1) ── */
+.hero-metrics-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  justify-content: center;
 }
 
 
@@ -708,22 +724,151 @@ body {
   opacity: .4; cursor: default;
 }
 
+/* ── Forecast + Zone Breakdown Row ── */
+.forecast-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+/* ── Benchmarking Rows ── */
+.bench-rows { display: flex; flex-direction: column; gap: 8px; }
+.bench-row {
+  display: grid;
+  grid-template-columns: 100px 1fr 52px;
+  align-items: center;
+  gap: 10px;
+}
+.bench-row__label {
+  font-size: 11px; font-weight: 600; color: var(--text-secondary);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.bench-row__bar-wrap {
+  background: var(--bg-muted);
+  border-radius: 99px; height: 10px;
+  overflow: hidden;
+  border: 1px solid var(--border-light);
+}
+.bench-row__bar {
+  height: 100%; border-radius: 99px;
+  transition: width .6s cubic-bezier(.4,0,.2,1);
+}
+.bench-row__value {
+  font-size: 11px; font-weight: 700; text-align: right;
+  white-space: nowrap;
+}
+
+/* ── Conservation Goal Bars ── */
+.goal-item { display: flex; flex-direction: column; gap: 5px; }
+.goal-item__header {
+  display: flex; justify-content: space-between; align-items: baseline;
+  font-size: 11px;
+}
+.goal-item__name { font-weight: 600; color: var(--text-secondary); }
+.goal-item__pct { font-weight: 800; font-size: 12px; }
+.goal-bar-track {
+  background: var(--bg-muted);
+  border-radius: 99px; height: 8px;
+  overflow: visible; position: relative;
+  border: 1px solid var(--border-light);
+}
+.goal-bar-fill {
+  height: 100%; border-radius: 99px;
+  transition: width .7s cubic-bezier(.4,0,.2,1);
+  position: relative; z-index: 1;
+}
+.goal-bar-target-marker {
+  position: absolute; top: -3px;
+  width: 2px; height: 14px;
+  background: var(--text-muted);
+  border-radius: 2px;
+  z-index: 2;
+  transform: translateX(-50%);
+}
+
 /* ── Responsive ── */
+
+/* Tablet / medium screens */
 @media (max-width: 1200px) {
+  .row-1-grid { grid-template-columns: 1fr 1fr; }
   .sensor-hero { grid-template-columns: 1fr 1fr; }
   .bottom-section { grid-template-columns: 1fr; }
   .secondary-grid { grid-template-columns: repeat(2, 1fr); }
+  .forecast-row { grid-template-columns: 1fr; }
 }
+
+/* Small tablet */
+@media (max-width: 1024px) {
+  .row-1-grid { grid-template-columns: 1fr 1fr; }
+  .top-header {
+    flex-wrap: wrap;
+    height: auto;
+    padding: 8px 16px;
+    gap: 8px;
+  }
+  .top-header__actions {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .bottom-section { grid-template-columns: 1fr; }
+  .forecast-row { grid-template-columns: 1fr; }
+  .secondary-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* Mobile */
 @media (max-width: 768px) {
+  .row-1-grid { grid-template-columns: 1fr; }
   .sensor-hero { grid-template-columns: 1fr; }
   .dashboard-grid { grid-template-columns: 1fr; }
   .secondary-grid { grid-template-columns: 1fr; }
-  .top-header { padding: 0 12px; flex-wrap: wrap; height: auto; padding: 8px 12px; gap: 8px; }
+  .bottom-section { grid-template-columns: 1fr; }
+  .forecast-row { grid-template-columns: 1fr; }
+
+  .top-header {
+    flex-direction: column;
+    align-items: flex-start;
+    height: auto;
+    padding: 10px 12px;
+    gap: 8px;
+  }
+  .top-header__actions {
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .header-info {
+    flex-wrap: wrap;
+  }
   .dashboard-main { padding: 12px; }
+
+  /* Make cards & charts full-width friendly */
+  .card { padding: 12px; }
+  .chart-container { height: 200px; }
+  .metric-row__value { font-size: 18px; }
+
+  /* Chat panel full-screen on mobile */
   .chat-panel {
     width: calc(100vw - 16px);
     height: calc(100vh - 16px);
     bottom: 8px; right: 8px;
     border-radius: 12px;
   }
+}
+
+/* Extra small screens */
+@media (max-width: 480px) {
+  .dashboard-main { padding: 8px; }
+  .row-1-grid,
+  .forecast-row,
+  .bottom-section,
+  .secondary-grid {
+    gap: 12px;
+  }
+  .top-header__brand span:last-child { display: none; }
+  .meter-select { max-width: 140px; }
+  .weather-grid { grid-template-columns: repeat(2, 1fr); }
+  .correlation-grid { grid-template-columns: repeat(2, 1fr); }
+  .data-table { font-size: 11px; }
+  .data-table th, .data-table td { padding: 6px 8px; }
 }

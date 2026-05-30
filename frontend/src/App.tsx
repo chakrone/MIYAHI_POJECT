@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Droplet, RefreshCw, MapPin } from 'lucide-react';
 import SensorHero from './components/dashboard/SensorHero';
-import VelocityChart from './components/dashboard/VelocityChart';
-import FlowChart from './components/dashboard/FlowChart';
+
 import ReadingsTable from './components/dashboard/ReadingsTable';
 import MapPanel from './components/dashboard/MapPanel';
 import AlertFeed from './components/dashboard/AlertFeed';
@@ -10,6 +9,9 @@ import WeatherPanel from './components/dashboard/WeatherPanel';
 import BillingCard from './components/dashboard/BillingCard';
 import AnomalyPanel from './components/dashboard/AnomalyPanel';
 import ChatWidget from './components/dashboard/ChatWidget';
+import UsageForecastWeatherChart from './components/dashboard/UsageForecastWeatherChart';
+import BenchmarkingGoalsPanel from './components/dashboard/BenchmarkingGoalsPanel';
+import ZoneBreakdownChart from './components/dashboard/ZoneBreakdownChart';
 
 function App() {
   const [selectedMeter, setSelectedMeter] = useState('meter_001');
@@ -70,16 +72,19 @@ function App() {
 
       {/* ── Dashboard Body ── */}
       <main className="dashboard-main">
-        {/* Row 1: Sensor Image + Live Metrics + Cumulative + Consumption Chart */}
-        <SensorHero meterId={selectedMeter} />
-
-        {/* Row 2: Velocity & Flow Charts */}
-        <div className="dashboard-grid">
-          <VelocityChart meterId={selectedMeter} />
-          <FlowChart meterId={selectedMeter} />
+        {/* Row 1: Conservation Goals | Live Metrics | Hourly Consumption */}
+        <div className="row-1-grid" style={{ marginBottom: 20 }}>
+          <BenchmarkingGoalsPanel meterId={selectedMeter} />
+          <SensorHero meterId={selectedMeter} />
         </div>
 
-        {/* Row 3: Data Table + Map/Meter Details */}
+        {/* Row 2: Usage Forecast + Weather | Zone Breakdown */}
+        <div className="forecast-row" style={{ marginBottom: 20 }}>
+          <UsageForecastWeatherChart meterId={selectedMeter} />
+          <ZoneBreakdownChart meterId={selectedMeter} />
+        </div>
+
+        {/* Row 3: Sensor Readings Table | Meter Details */}
         <div className="bottom-section">
           <ReadingsTable meterId={selectedMeter} />
           <MapPanel meterId={selectedMeter} meterLabel={meterLabel} />
