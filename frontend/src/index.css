@@ -1,6 +1,6 @@
-/* ══════════════════════════════════════════════════════════
-   MIYAHI — Water Flow Monitoring Dashboard
-   ══════════════════════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   MIYAHI â€” Water Flow Monitoring Dashboard
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 @import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,500;1,600&display=swap');
 
 :root {
@@ -8,8 +8,10 @@
   --green-600: #1a7a4e;
   --green-500: #22a264;
   --green-400: #34d399;
-  --blue-500: #3b82f6;
+  --blue-700: #1d4ed8;
   --blue-600: #2563eb;
+  --blue-500: #3b82f6;
+  --blue-400: #60a5fa;
   --amber-500: #f59e0b;
   --rose-500: #ef4444;
   --teal-500: #14b8a6;
@@ -41,9 +43,9 @@ body {
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
 
-/* ── Top Header Bar ── */
+/* â”€â”€ Top Header Bar â”€â”€ */
 .top-header {
-  background: linear-gradient(135deg, var(--green-700), var(--green-600));
+  background: linear-gradient(135deg, var(--blue-700), var(--blue-600));
   color: white;
   display: flex;
   align-items: center;
@@ -69,8 +71,8 @@ body {
   display: flex; align-items: center; gap: 16px;
 }
 .sync-btn {
-  background: var(--green-400);
-  color: var(--green-700);
+  background: var(--blue-400);
+  color: var(--blue-700);
   border: none;
   padding: 5px 20px;
   border-radius: 4px;
@@ -89,19 +91,19 @@ body {
 .header-info strong { font-weight: 700; }
 .status-dot {
   width: 8px; height: 8px; border-radius: 50%;
-  background: var(--green-400);
+  background: var(--blue-400);
   display: inline-block;
 }
-.status-active { color: var(--green-400); font-weight: 700; }
+.status-active { color: var(--blue-400); font-weight: 700; }
 
-/* ── Main Layout ── */
+/* â”€â”€ Main Layout â”€â”€ */
 .dashboard-main {
   padding: 20px 24px;
   max-width: 1600px;
   margin: 0 auto;
 }
 
-/* ── Row 1: Conservation Goals | Live Metrics | Hourly Consumption ── */
+/* â”€â”€ Row 1: Conservation Goals | Live Metrics | Hourly Consumption â”€â”€ */
 .row-1-grid {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
@@ -109,7 +111,7 @@ body {
   align-items: stretch;
 }
 
-/* ── Card ── */
+/* â”€â”€ Card â”€â”€ */
 .card {
   background: var(--bg-card);
   border: 1px solid var(--border);
@@ -136,7 +138,7 @@ body {
 }
 .card__actions button:hover { background: var(--bg-muted); color: var(--text-primary); }
 
-/* ── Sensor Hero Section (legacy, kept for reference) ── */
+/* â”€â”€ Sensor Hero Section (legacy, kept for reference) â”€â”€ */
 .sensor-hero {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
@@ -144,7 +146,7 @@ body {
   margin-bottom: 20px;
 }
 
-/* ── Hero Metrics Stack (middle column of row-1) ── */
+/* â”€â”€ Hero Metrics Stack (middle column of row-1) â”€â”€ */
 .hero-metrics-stack {
   display: flex;
   flex-direction: column;
@@ -153,7 +155,7 @@ body {
 }
 
 
-/* ── Live Metrics ── */
+/* â”€â”€ Live Metrics â”€â”€ */
 .live-metrics {
   display: flex; flex-direction: column; gap: 8px;
   justify-content: center;
@@ -168,7 +170,7 @@ body {
 }
 .metric-row__icon {
   width: 36px; height: 36px; border-radius: 50%;
-  background: var(--green-600);
+  background: var(--blue-600);
   display: flex; align-items: center; justify-content: center;
   color: white; flex-shrink: 0;
 }
@@ -186,7 +188,7 @@ body {
 }
 .metric-row__unit { font-size: 13px; font-weight: 500; color: var(--text-secondary); margin-left: 3px; }
 
-/* ── Cumulative Stats ── */
+/* â”€â”€ Cumulative Stats â”€â”€ */
 .cumulative-stats {
   display: flex; flex-direction: column; gap: 8px;
   justify-content: center;
@@ -208,7 +210,7 @@ body {
   margin-top: 2px;
 }
 
-/* ── Dashboard Grid ── */
+/* â”€â”€ Dashboard Grid â”€â”€ */
 .dashboard-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -217,7 +219,7 @@ body {
 }
 .dashboard-grid .span-full { grid-column: 1 / -1; }
 
-/* ── Chart Container ── */
+/* â”€â”€ Chart Container â”€â”€ */
 .chart-container { width: 100%; height: 250px; }
 .chart-footer {
   display: flex; align-items: center; justify-content: space-between;
@@ -234,14 +236,14 @@ body {
 .chart-stats span { font-weight: 600; color: var(--text-primary); }
 .chart-stats small { color: var(--text-muted); font-weight: 600; margin-right: 4px; }
 
-/* ── Bottom Section ── */
+/* â”€â”€ Bottom Section â”€â”€ */
 .bottom-section {
   display: grid;
   grid-template-columns: 1fr 360px;
   gap: 16px;
 }
 
-/* ── Data Table ── */
+/* â”€â”€ Data Table â”€â”€ */
 .data-table-card { overflow: hidden; }
 .data-table-header {
   display: flex; align-items: center; justify-content: space-between;
@@ -286,7 +288,7 @@ body {
 .table-pagination button:hover { background: var(--bg-muted); }
 .table-pagination button:disabled { opacity: .4; cursor: default; }
 
-/* ── Map Panel ── */
+/* â”€â”€ Map Panel â”€â”€ */
 .map-placeholder {
   background: #e8f5e9;
   border-radius: var(--radius);
@@ -316,7 +318,7 @@ body {
   white-space: nowrap;
 }
 
-/* ── Meter Details ── */
+/* â”€â”€ Meter Details â”€â”€ */
 .meter-details { margin-top: 0; }
 .meter-details h3 {
   font-size: 13px; font-weight: 700; margin-bottom: 10px;
@@ -335,7 +337,7 @@ body {
 .meter-details-row dd { font-weight: 600; color: var(--text-primary); }
 .meter-status-online { color: var(--green-500); }
 
-/* ── Alert & Weather Sections ── */
+/* â”€â”€ Alert & Weather Sections â”€â”€ */
 .secondary-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -360,18 +362,18 @@ body {
   padding: 2px 8px; font-size: 10px; font-weight: 600; cursor: pointer;
   color: var(--text-secondary);
 }
-.alert-item__ack-btn:hover { background: var(--green-400); color: white; border-color: transparent; }
+.alert-item__ack-btn:hover { background: var(--blue-400); color: white; border-color: transparent; }
 
-/* ── Weather ── */
+/* â”€â”€ Weather â”€â”€ */
 .weather-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
 .weather-stat {
   text-align: center; padding: 12px 8px; border-radius: var(--radius);
   background: var(--bg-muted); border: 1px solid var(--border-light);
 }
-.weather-stat__value { font-size: 18px; font-weight: 700; color: var(--green-600); margin-bottom: 2px; }
+.weather-stat__value { font-size: 18px; font-weight: 700; color: var(--blue-600); margin-bottom: 2px; }
 .weather-stat__label { font-size: 10px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: .5px; }
 
-/* ── Anomaly & Billing ── */
+/* â”€â”€ Anomaly & Billing â”€â”€ */
 .anomaly-stats { display: flex; gap: 10px; margin-bottom: 12px; }
 .anomaly-stat {
   flex: 1; text-align: center; padding: 10px;
@@ -380,7 +382,7 @@ body {
 }
 .anomaly-stat__value { font-size: 18px; font-weight: 800; }
 .anomaly-stat__label { font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
-.billing-total { font-size: 28px; font-weight: 800; color: var(--green-600); margin-bottom: 2px; }
+.billing-total { font-size: 28px; font-weight: 800; color: var(--blue-600); margin-bottom: 2px; }
 .billing-currency { font-size: 12px; color: var(--text-muted); margin-bottom: 12px; }
 .billing-tier {
   display: flex; align-items: center; justify-content: space-between;
@@ -390,12 +392,12 @@ body {
 .billing-tier__name { font-weight: 500; color: var(--text-secondary); }
 .billing-tier__amount { font-weight: 700; }
 
-/* ── Gauge ── */
+/* â”€â”€ Gauge â”€â”€ */
 .gauge-container { display: flex; flex-direction: column; align-items: center; padding: 10px 0; }
-.gauge-value { font-size: 22px; font-weight: 800; margin-top: -35px; color: var(--green-600); }
+.gauge-value { font-size: 22px; font-weight: 800; margin-top: -35px; color: var(--blue-600); }
 .gauge-label { font-size: 11px; color: var(--text-muted); margin-top: 8px; font-weight: 600; }
 
-/* ── Correlation ── */
+/* â”€â”€ Correlation â”€â”€ */
 .correlation-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 12px; }
 .correlation-item { text-align: center; padding: 10px; border-radius: var(--radius); background: var(--bg-muted); border: 1px solid var(--border-light); }
 .correlation-item__value { font-size: 16px; font-weight: 700; margin-bottom: 2px; }
@@ -404,13 +406,13 @@ body {
 .correlation-item--negative .correlation-item__value { color: var(--green-500); }
 .correlation-item--weak .correlation-item__value { color: var(--text-muted); }
 
-/* ── Loading / Empty ── */
+/* â”€â”€ Loading / Empty â”€â”€ */
 .loading { display: flex; align-items: center; justify-content: center; padding: 24px; color: var(--text-muted); font-size: 12px; }
-.loading-spinner { width: 18px; height: 18px; border: 2px solid var(--border); border-top-color: var(--green-500); border-radius: 50%; animation: spin .7s linear infinite; margin-right: 8px; }
+.loading-spinner { width: 18px; height: 18px; border: 2px solid var(--border); border-top-color: var(--blue-500); border-radius: 50%; animation: spin .7s linear infinite; margin-right: 8px; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .empty-state { text-align: center; padding: 24px; color: var(--text-muted); font-size: 12px; }
 
-/* ── Meter Select ── */
+/* â”€â”€ Meter Select â”€â”€ */
 .meter-select {
   padding: 4px 10px; border-radius: 4px;
   border: 1px solid rgba(255,255,255,.3);
@@ -420,7 +422,7 @@ body {
 }
 .meter-select option { color: var(--text-primary); background: white; }
 
-/* ── Status Badges (ReadingsTable) ── */
+/* â”€â”€ Status Badges (ReadingsTable) â”€â”€ */
 .status-badge {
   display: inline-flex; align-items: center; gap: 4px;
   padding: 2px 8px; border-radius: 12px;
@@ -442,12 +444,12 @@ body {
   50% { opacity: .7; }
 }
 
-/* ── Unit Labels ── */
+/* â”€â”€ Unit Labels â”€â”€ */
 .unit-label {
   font-size: 10px; color: var(--text-muted); font-weight: 500;
 }
 
-/* ── Health Badge (AnomalyPanel) ── */
+/* â”€â”€ Health Badge (AnomalyPanel) â”€â”€ */
 .health-badge {
   display: inline-flex; align-items: center; gap: 4px;
   padding: 3px 10px; border-radius: 12px;
@@ -460,23 +462,23 @@ body {
   background: #fef2f2; color: #991b1b;
 }
 
-/* ── Cumulative Stats sublabel ── */
+/* â”€â”€ Cumulative Stats sublabel â”€â”€ */
 .cumstat-item__sublabel {
   font-size: 9px; color: var(--text-muted); margin-top: 1px;
   font-weight: 500;
 }
 
-/* ═══════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    CHATBOT WIDGET
-   ═══════════════════════════════════════════ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
-/* ── Floating Action Button ── */
+/* â”€â”€ Floating Action Button â”€â”€ */
 .chat-fab {
   position: fixed;
   bottom: 24px; right: 24px;
   width: 56px; height: 56px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--green-600), var(--green-500));
+  background: linear-gradient(135deg, var(--blue-600), var(--blue-500));
   color: white;
   border: none;
   cursor: pointer;
@@ -493,7 +495,7 @@ body {
   position: absolute;
   width: 100%; height: 100%;
   border-radius: 50%;
-  background: var(--green-400);
+  background: var(--blue-400);
   animation: fab-pulse 2.5s ease-out infinite;
   pointer-events: none;
 }
@@ -502,7 +504,7 @@ body {
   100% { transform: scale(1.8); opacity: 0; }
 }
 
-/* ── Chat Panel ── */
+/* â”€â”€ Chat Panel â”€â”€ */
 .chat-panel {
   position: fixed;
   bottom: 24px; right: 24px;
@@ -523,11 +525,11 @@ body {
   to { transform: translateY(0) scale(1); opacity: 1; }
 }
 
-/* ── Panel Header ── */
+/* â”€â”€ Panel Header â”€â”€ */
 .chat-panel__header {
   display: flex; align-items: center; justify-content: space-between;
   padding: 14px 18px;
-  background: linear-gradient(135deg, var(--green-700), var(--green-600));
+  background: linear-gradient(135deg, var(--blue-700), var(--blue-600));
   color: white;
 }
 .chat-panel__header-info {
@@ -554,14 +556,14 @@ body {
 }
 .chat-panel__close:hover { background: rgba(255,255,255,.25); }
 
-/* ── Messages Area ── */
+/* â”€â”€ Messages Area â”€â”€ */
 .chat-panel__messages {
   flex: 1; overflow-y: auto;
   padding: 16px;
   display: flex; flex-direction: column; gap: 12px;
 }
 
-/* ── Welcome Screen ── */
+/* â”€â”€ Welcome Screen â”€â”€ */
 .chat-welcome {
   text-align: center;
   padding: 32px 16px;
@@ -571,7 +573,7 @@ body {
   width: 60px; height: 60px; border-radius: 50%;
   background: linear-gradient(135deg, #dcfce7, #bbf7d0);
   display: flex; align-items: center; justify-content: center;
-  color: var(--green-600);
+  color: var(--blue-600);
   margin-bottom: 8px;
 }
 .chat-welcome__title {
@@ -582,7 +584,7 @@ body {
   max-width: 280px;
 }
 
-/* ── Message Bubbles ── */
+/* â”€â”€ Message Bubbles â”€â”€ */
 .chat-message {
   display: flex; gap: 8px;
   max-width: 90%;
@@ -601,10 +603,10 @@ body {
 }
 .chat-message--assistant .chat-message__icon {
   background: linear-gradient(135deg, #dcfce7, #bbf7d0);
-  color: var(--green-600);
+  color: var(--blue-600);
 }
 .chat-message--user .chat-message__icon {
-  background: var(--green-600);
+  background: var(--blue-600);
   color: white;
 }
 .chat-message__content {
@@ -632,7 +634,7 @@ body {
   font-family: 'Courier New', Courier, monospace;
 }
 .chat-message--user .chat-message__text {
-  background: linear-gradient(135deg, var(--green-600), var(--green-500));
+  background: linear-gradient(135deg, var(--blue-600), var(--blue-500));
   color: white;
   border-top-right-radius: 4px;
 }
@@ -644,7 +646,7 @@ body {
   text-align: right;
 }
 
-/* ── Typing Indicator ── */
+/* â”€â”€ Typing Indicator â”€â”€ */
 .chat-typing {
   display: flex; gap: 4px; padding: 12px 16px;
 }
@@ -660,7 +662,7 @@ body {
   50% { transform: translateY(-6px); opacity: 1; }
 }
 
-/* ── Suggestion Chips ── */
+/* â”€â”€ Suggestion Chips â”€â”€ */
 .chat-suggestions {
   display: flex; flex-wrap: wrap; gap: 6px;
   padding: 0 16px 12px;
@@ -671,18 +673,18 @@ body {
   border-radius: 16px;
   padding: 6px 12px;
   font-size: 11px; font-weight: 500;
-  color: var(--green-600);
+  color: var(--blue-600);
   cursor: pointer;
   transition: all .2s var(--ease);
   font-family: inherit;
 }
 .chat-suggestion-chip:hover {
   background: #dcfce7;
-  border-color: var(--green-400);
+  border-color: var(--blue-400);
   transform: translateY(-1px);
 }
 
-/* ── Input Area ── */
+/* â”€â”€ Input Area â”€â”€ */
 .chat-panel__input {
   display: flex; align-items: center; gap: 8px;
   padding: 12px 16px;
@@ -701,7 +703,7 @@ body {
   background: var(--bg-muted);
 }
 .chat-panel__input input:focus {
-  border-color: var(--green-500);
+  border-color: var(--blue-500);
   background: white;
 }
 .chat-panel__input input::placeholder {
@@ -709,7 +711,7 @@ body {
 }
 .chat-send-btn {
   width: 38px; height: 38px; border-radius: 50%;
-  background: linear-gradient(135deg, var(--green-600), var(--green-500));
+  background: linear-gradient(135deg, var(--blue-600), var(--blue-500));
   color: white; border: none;
   display: flex; align-items: center; justify-content: center;
   cursor: pointer;
@@ -724,15 +726,15 @@ body {
   opacity: .4; cursor: default;
 }
 
-/* ── Forecast + Zone Breakdown Row ── */
+/* â”€â”€ Forecast + Zone Breakdown Row â”€â”€ */
 .forecast-row {
   display: grid;
   grid-template-columns: 2fr 1fr;
   gap: 16px;
-  align-items: start;
+  align-items: stretch;
 }
 
-/* ── Benchmarking Rows ── */
+/* â”€â”€ Benchmarking Rows â”€â”€ */
 .bench-rows { display: flex; flex-direction: column; gap: 8px; }
 .bench-row {
   display: grid;
@@ -759,7 +761,7 @@ body {
   white-space: nowrap;
 }
 
-/* ── Conservation Goal Bars ── */
+/* â”€â”€ Conservation Goal Bars â”€â”€ */
 .goal-item { display: flex; flex-direction: column; gap: 5px; }
 .goal-item__header {
   display: flex; justify-content: space-between; align-items: baseline;
@@ -787,7 +789,7 @@ body {
   transform: translateX(-50%);
 }
 
-/* ── Responsive ── */
+/* â”€â”€ Responsive â”€â”€ */
 
 /* Tablet / medium screens */
 @media (max-width: 1200px) {
@@ -872,3 +874,5 @@ body {
   .data-table { font-size: 11px; }
   .data-table th, .data-table td { padding: 6px 8px; }
 }
+
+/* trigger reload */

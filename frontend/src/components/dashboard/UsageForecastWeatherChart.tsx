@@ -131,18 +131,18 @@ export default function UsageForecastWeatherChart({ meterId }: Props) {
     }));
   }, [history, forecastData, weather]);
 
-  // Fallback demo data when APIs aren't ready yet
+  // Fallback demo data — shows weather↔usage correlation (hotter = more usage)
   const demoData = [
-    { day: 'Mon', actual: 270, lower: null, upper: null, band: null, temp: 28, isFuture: false },
-    { day: 'Tue', actual: 310, lower: null, upper: null, band: null, temp: 30, isFuture: false },
-    { day: 'Wed', actual: 295, lower: null, upper: null, band: null, temp: 27, isFuture: false },
-    { day: 'Thu', actual: 320, lower: null, upper: null, band: null, temp: 31, isFuture: false },
-    { day: 'Fri', actual: 345, lower: null, upper: null, band: null, temp: 34, isFuture: false },
-    { day: 'Sat', actual: 350, lower: null, upper: null, band: null, temp: 35, isFuture: false },
-    { day: 'Sun', actual: 305, lower: null, upper: null, band: null, temp: 31, isFuture: false },
-    { day: 'Mon+', actual: 305, lower: 290, upper: 330, band: [290, 330], temp: 29, isFuture: true },
-    { day: 'Tue+', actual: null, lower: 285, upper: 335, band: [285, 335], temp: 31, isFuture: true },
-    { day: 'Wed+', actual: null, lower: 295, upper: 355, band: [295, 355], temp: 33, isFuture: true },
+    { day: 'Mon',    actual: 260, lower: null, upper: null, band: null, temp: 24, isFuture: false },
+    { day: 'Tue',    actual: 290, lower: null, upper: null, band: null, temp: 27, isFuture: false },
+    { day: 'Wed',    actual: 330, lower: null, upper: null, band: null, temp: 32, isFuture: false },
+    { day: 'Thu',    actual: 355, lower: null, upper: null, band: null, temp: 35, isFuture: false },
+    { day: 'Fri',    actual: 340, lower: null, upper: null, band: null, temp: 33, isFuture: false },
+    { day: 'Sat',    actual: 310, lower: null, upper: null, band: null, temp: 29, isFuture: false },
+    { day: 'Sun',    actual: 280, lower: null, upper: null, band: null, temp: 25, isFuture: false },
+    { day: 'Mon (f)', actual: 280, lower: 260, upper: 310, band: [260, 310], temp: 26, isFuture: true },
+    { day: 'Tue (f)', actual: null, lower: 300, upper: 360, band: [300, 360], temp: 34, isFuture: true },
+    { day: 'Wed (f)', actual: null, lower: 310, upper: 380, band: [310, 380], temp: 36, isFuture: true },
   ];
 
   const data = chartData.length >= 3 ? chartData : demoData;
@@ -214,7 +214,7 @@ export default function UsageForecastWeatherChart({ meterId }: Props) {
               />
             )}
 
-            {/* Forecast confidence band (Area) */}
+            {/* Forecast confidence band — upper bound (filled) */}
             <Area
               yAxisId="left"
               type="monotone"
@@ -224,19 +224,35 @@ export default function UsageForecastWeatherChart({ meterId }: Props) {
               legendType="none"
               dot={false}
               activeDot={false}
-              name="Forecast band"
+              name="Upper bound"
+              tooltipType="none"
             />
-            <Area
+            {/* Forecast lower bound line */}
+            <Line
               yAxisId="left"
               type="monotone"
               dataKey="lower"
               stroke="#14b8a6"
               strokeWidth={1.5}
               strokeDasharray="5 3"
-              fill="white"
               dot={{ r: 3, fill: '#14b8a6', strokeWidth: 0 }}
               activeDot={{ r: 5 }}
-              name="Forecast band"
+              connectNulls={false}
+              name="Forecast (lower)"
+            />
+            {/* Forecast upper bound line */}
+            <Line
+              yAxisId="left"
+              type="monotone"
+              dataKey="upper"
+              stroke="#14b8a6"
+              strokeWidth={1.5}
+              strokeDasharray="5 3"
+              dot={{ r: 3, fill: '#14b8a6', strokeWidth: 0 }}
+              activeDot={{ r: 5 }}
+              connectNulls={false}
+              name="Forecast (upper)"
+              legendType="none"
             />
 
             {/* Actual usage line */}
