@@ -39,4 +39,11 @@ public interface MeterReadingRepository extends JpaRepository<MeterReading, Mete
      */
     @Query("SELECT m FROM MeterReading m WHERE m.meterId = :meterId AND m.time >= :since ORDER BY m.time DESC")
     List<MeterReading> findRecentReadings(@Param("meterId") String meterId, @Param("since") Instant since);
+
+    /**
+     * Aggregate total volume per meter since a given time.
+     * Returns rows of [meterId, sumVolume].
+     */
+    @Query("SELECT m.meterId, SUM(m.volume) FROM MeterReading m WHERE m.time >= :since GROUP BY m.meterId ORDER BY SUM(m.volume) DESC")
+    List<Object[]> findVolumeBreakdownSince(@Param("since") Instant since);
 }

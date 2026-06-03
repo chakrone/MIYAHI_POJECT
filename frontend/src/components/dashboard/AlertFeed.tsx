@@ -1,24 +1,9 @@
 import { useCallback } from 'react';
 import { AlertTriangle, ArrowUp, Check, Bell, Activity } from 'lucide-react';
 import { usePolling } from '../../hooks/usePolling';
-import { getAlerts, getAnomalies } from '../../services/api';
-import type { AnomalyFlag } from '../../types';
+import { getAlerts } from '../../services/api';
 
-/* ── Map anomaly flags into alert-like entries ── */
-function anomaliesToAlerts(anomalies: AnomalyFlag[]) {
-  return anomalies.map((a, i) => ({
-    id: `anomaly-${i}`,
-    meter_id: a.meter_id,
-    type: a.anomaly_type,
-    severity: a.severity === 'critical' ? 'critical' : a.severity === 'high' ? 'warning' : 'info',
-    message: a.description,
-    acknowledged: false,
-    acknowledged_at: null,
-    created_at: a.time,
-  }));
-}
-
-/* ── Default alert data — shown when both API and anomalies are empty ── */
+/* ── Default alert data — shown when API is unavailable ── */
 const FALLBACK_ALERTS = [
   {
     id: 'demo-1',
@@ -68,22 +53,23 @@ function formatMeterId(id: string) {
   return id.replace(/^meter_/i, 'Meter ').replace(/_/g, ' ');
 }
 
-export default function AlertFeed() {
+interface Props {
+  meterId: string;
+}
+
+export default function AlertFeed({ meterId }: Props) {
   const fetchAlerts = useCallback(() => getAlerts(), []);
-  // Fetch anomalies for all meters — use a broad query
-  const fetchAnomalies = useCallback(() => getAnomalies('meter_001', '24h'), []);
-
   const { data: alerts } = usePolling(fetchAlerts, 5000);
-  const { data: anomalies } = usePolling(fetchAnomalies, 8000);
 
-  // Merge: prefer live alerts, then anomalies, then fallback
-  const anomalyAlerts = anomalies && anomalies.length > 0 ? anomaliesToAlerts(anomalies) : [];
   const liveAlerts = alerts && alerts.length > 0 ? alerts : [];
+  const isLive = liveAlerts.length > 0;
 
-  // Combine and deduplicate by preferring alerts, then anomalies
-  const combined = [...liveAlerts, ...anomalyAlerts];
-  const displayAlerts = combined.length > 0 ? combined : FALLBACK_ALERTS;
-  const isLive = combined.length > 0;
+  // Use live alerts if available, otherwise fallback demo data
+  const allAlerts = isLive ? liveAlerts : FALLBACK_ALERTS;
+
+  // Filter to selected meter — if no alerts match, show all
+  const meterAlerts = allAlerts.filter(a => a.meter_id === meterId);
+  const displayAlerts = meterAlerts.length > 0 ? meterAlerts : allAlerts;
 
   const formatTime = (iso: string) => {
     const d = new Date(iso);
@@ -130,6 +116,8 @@ export default function AlertFeed() {
     }
   };
 
+  const meterLabel = formatMeterId(meterId);
+
   return (
     <div className="card" id="alert-feed">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
@@ -139,7 +127,9 @@ export default function AlertFeed() {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 10, color: 'var(--text-muted)' }}>
           {isLive && <Activity size={10} style={{ color: '#22c55e' }} />}
-          {isLive ? `${displayAlerts.length} alerts · Live` : 'Demo data'}
+          {isLive
+            ? `${displayAlerts.length} alert${displayAlerts.length !== 1 ? 's' : ''} · ${meterAlerts.length > 0 ? meterLabel : 'All meters'}`
+            : 'Demo data'}
         </div>
       </div>
 

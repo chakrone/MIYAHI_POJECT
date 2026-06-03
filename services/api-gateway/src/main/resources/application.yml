@@ -62,6 +62,8 @@ spring:
               - "http://localhost"
               - "http://localhost:5173"
               - "http://localhost:3000"
+              - "https://miyahi.duckdns.org"
+              - "http://miyahi.duckdns.org"
             allowedMethods: "*"
             allowedHeaders: "*"
             allowCredentials: true

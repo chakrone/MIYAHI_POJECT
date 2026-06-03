@@ -39,6 +39,16 @@ export const getAnomalies = (meterId: string, range = '24h') =>
 export const getAnomalyStats = () =>
   api.get<{ readings_processed: number; anomalies_detected: number }>('/anomalies/stats').then(r => r.data);
 
+/* ── Meter Breakdown (Ingestion service via Gateway) ── */
+export interface MeterBreakdown {
+  meterId: string;
+  label: string;
+  volume: number;
+  pct: number;
+}
+export const getMeterBreakdown = (range = '24h') =>
+  api.get<MeterBreakdown[]>('/readings/breakdown', { params: { range } }).then(r => r.data);
+
 /* ── Forecasting (Python via Gateway) ── */
 export const getForecast = (meterId: string, days = 7) =>
   api.get<ForecastResult>(`/forecast/${meterId}`, { params: { days } }).then(r => r.data);

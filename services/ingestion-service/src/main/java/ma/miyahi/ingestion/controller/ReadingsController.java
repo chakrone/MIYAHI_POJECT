@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -72,6 +73,51 @@ public class ReadingsController {
         stats.put("messages_dropped", ingestionHandler.getMessagesDropped());
         stats.put("active_meters", repository.findDistinctMeterIds().size());
         return ResponseEntity.ok(stats);
+    }
+
+    /** Friendly labels for known meter IDs — mirrors simulator config. */
+    private static final Map<String, String> METER_LABELS = Map.of(
+            "meter_001", "Main Meter",
+            "meter_002", "Kitchen Meter",
+            "meter_003", "Garden Meter",
+            "meter_004", "Bathroom Meter",
+            "meter_005", "Pool Meter"
+    );
+
+    /**
+     * GET /api/readings/breakdown?range=24h — Volume breakdown across all meters.
+     * Returns each meter's volume and percentage of the total.
+     */
+    @GetMapping("/breakdown")
+    public ResponseEntity<List<Map<String, Object>>> getBreakdown(
+            @RequestParam(defaultValue = "24h") String range) {
+
+        Duration duration = parseDuration(range);
+        Instant since = Instant.now().minus(duration);
+
+        List<Object[]> rows = repository.findVolumeBreakdownSince(since);
+
+        // Compute total volume
+        double totalVolume = 0;
+        for (Object[] row : rows) {
+            totalVolume += ((Number) row[1]).doubleValue();
+        }
+
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (Object[] row : rows) {
+            String meterId = (String) row[0];
+            double volume = ((Number) row[1]).doubleValue();
+            double pct = totalVolume > 0 ? Math.round(volume / totalVolume * 1000.0) / 10.0 : 0;
+
+            Map<String, Object> entry = new HashMap<>();
+            entry.put("meterId", meterId);
+            entry.put("label", METER_LABELS.getOrDefault(meterId, meterId));
+            entry.put("volume", Math.round(volume * 1000.0) / 1000.0);
+            entry.put("pct", pct);
+            result.add(entry);
+        }
+
+        return ResponseEntity.ok(result);
     }
 
     /**

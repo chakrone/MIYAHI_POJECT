@@ -81,7 +81,7 @@ function App() {
         {/* Row 2: Usage Forecast + Weather | Zone Breakdown */}
         <div className="forecast-row" style={{ marginBottom: 20 }}>
           <UsageForecastWeatherChart meterId={selectedMeter} />
-          <ZoneBreakdownChart meterId={selectedMeter} />
+          <ZoneBreakdownChart />
         </div>
 
         {/* Row 3: Sensor Readings Table | Meter Details */}
@@ -92,7 +92,7 @@ function App() {
 
         {/* Row 4: Alerts, Weather, Billing, Anomaly */}
         <div className="secondary-grid" style={{ marginTop: 20 }}>
-          <AlertFeed />
+          <AlertFeed meterId={selectedMeter} />
           <WeatherPanel meterId={selectedMeter} />
           <BillingCard />
           <AnomalyPanel meterId={selectedMeter} />
