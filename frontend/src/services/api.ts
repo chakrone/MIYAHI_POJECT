@@ -21,6 +21,13 @@ export const getReadings = (meterId: string, range = '1h') =>
 export const getLatestReading = (meterId: string) =>
   api.get<MeterReading>(`/readings/${meterId}/latest`).then(r => r.data);
 
+/* ── Volume Aggregations ── */
+export const getVolumeConsumed = (meterId: string, range = '24h') =>
+  api.get<{ meterId: string; range: string; volumeM3: number }>(`/readings/${meterId}/volume`, { params: { range } }).then(r => r.data);
+
+export const getDailyVolumes = (meterId: string, range = '7d') =>
+  api.get<{ date: string; volumeM3: number }[]>(`/readings/${meterId}/daily`, { params: { range } }).then(r => r.data);
+
 /* ── Alerts ── */
 export const getAlerts = () => api.get<Alert[]>('/alerts').then(r => r.data);
 export const acknowledgeAlert = (id: string) => api.put(`/alerts/${id}/acknowledge`);

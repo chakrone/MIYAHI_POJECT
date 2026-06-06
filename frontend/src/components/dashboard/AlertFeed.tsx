@@ -1,51 +1,8 @@
 import { useCallback } from 'react';
-import { AlertTriangle, ArrowUp, Check, Bell, Activity } from 'lucide-react';
+import { AlertTriangle, ArrowUp, Check, Bell, Activity, ShieldCheck } from 'lucide-react';
 import { usePolling } from '../../hooks/usePolling';
 import { getAlerts } from '../../services/api';
 
-/* ── Default alert data — shown when API is unavailable ── */
-const FALLBACK_ALERTS = [
-  {
-    id: 'demo-1',
-    meter_id: 'meter_001',
-    type: 'leak_warning',
-    severity: 'warning',
-    message: 'Possible micro-leak detected',
-    acknowledged: false,
-    acknowledged_at: null,
-    created_at: new Date(Date.now() - 45 * 60000).toISOString(),
-  },
-  {
-    id: 'demo-2',
-    meter_id: 'meter_003',
-    type: 'usage_spike',
-    severity: 'info',
-    message: 'Usage spike detected',
-    acknowledged: false,
-    acknowledged_at: null,
-    created_at: new Date(Date.now() - 2 * 3600000).toISOString(),
-  },
-  {
-    id: 'demo-3',
-    meter_id: 'meter_002',
-    type: 'pressure_drop',
-    severity: 'critical',
-    message: 'Pressure drop below threshold',
-    acknowledged: false,
-    acknowledged_at: null,
-    created_at: new Date(Date.now() - 4 * 3600000).toISOString(),
-  },
-  {
-    id: 'demo-4',
-    meter_id: 'meter_005',
-    type: 'quality_check',
-    severity: 'success',
-    message: 'Quality check passed',
-    acknowledged: false,
-    acknowledged_at: null,
-    created_at: new Date(Date.now() - 6 * 3600000).toISOString(),
-  },
-];
 
 /* ── Format meter_id for display ── */
 function formatMeterId(id: string) {
@@ -61,11 +18,7 @@ export default function AlertFeed({ meterId }: Props) {
   const fetchAlerts = useCallback(() => getAlerts(), []);
   const { data: alerts } = usePolling(fetchAlerts, 5000);
 
-  const liveAlerts = alerts && alerts.length > 0 ? alerts : [];
-  const isLive = liveAlerts.length > 0;
-
-  // Use live alerts if available, otherwise fallback demo data
-  const allAlerts = isLive ? liveAlerts : FALLBACK_ALERTS;
+  const allAlerts = alerts && alerts.length > 0 ? alerts : [];
 
   // Filter to selected meter — if no alerts match, show all
   const meterAlerts = allAlerts.filter(a => a.meter_id === meterId);
@@ -126,84 +79,100 @@ export default function AlertFeed({ meterId }: Props) {
           Alert Feed
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 10, color: 'var(--text-muted)' }}>
-          {isLive && <Activity size={10} style={{ color: '#22c55e' }} />}
-          {isLive
+          {displayAlerts.length > 0 && <Activity size={10} style={{ color: '#22c55e' }} />}
+          {displayAlerts.length > 0
             ? `${displayAlerts.length} alert${displayAlerts.length !== 1 ? 's' : ''} · ${meterAlerts.length > 0 ? meterLabel : 'All meters'}`
-            : 'Demo data'}
+            : 'Live'}
         </div>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {displayAlerts.slice(0, 6).map(a => {
-          const cfg = getSeverityConfig(a.severity);
-          return (
-            <div
-              key={a.id}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 12,
-                padding: '10px 12px',
-                borderRadius: 10,
-                background: cfg.bg,
-                border: `1px solid ${cfg.border}`,
-                transition: 'transform 0.15s ease, box-shadow 0.15s ease',
-                cursor: 'default',
-              }}
-              onMouseEnter={e => {
-                (e.currentTarget as HTMLDivElement).style.transform = 'translateX(2px)';
-                (e.currentTarget as HTMLDivElement).style.boxShadow = `0 0 12px ${cfg.border}`;
-              }}
-              onMouseLeave={e => {
-                (e.currentTarget as HTMLDivElement).style.transform = 'none';
-                (e.currentTarget as HTMLDivElement).style.boxShadow = 'none';
-              }}
-            >
-              {/* Severity icon */}
-              <div style={{
-                flexShrink: 0,
-                width: 30,
-                height: 30,
-                borderRadius: 8,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: cfg.color,
-                background: cfg.bg,
-              }}>
-                {cfg.icon}
-              </div>
-
-              {/* Content */}
-              <div style={{ flex: 1, minWidth: 0 }}>
+      {displayAlerts.length === 0 ? (
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 8,
+          padding: '28px 16px',
+          color: 'var(--text-muted)',
+        }}>
+          <ShieldCheck size={28} style={{ color: '#22c55e', opacity: 0.7 }} />
+          <div style={{ fontSize: 13, fontWeight: 600, color: '#22c55e' }}>No active alerts</div>
+          <div style={{ fontSize: 11, opacity: 0.7 }}>All systems operating normally</div>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {displayAlerts.slice(0, 6).map(a => {
+            const cfg = getSeverityConfig(a.severity);
+            return (
+              <div
+                key={a.id}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 12,
+                  padding: '10px 12px',
+                  borderRadius: 10,
+                  background: cfg.bg,
+                  border: `1px solid ${cfg.border}`,
+                  transition: 'transform 0.15s ease, box-shadow 0.15s ease',
+                  cursor: 'default',
+                }}
+                onMouseEnter={e => {
+                  (e.currentTarget as HTMLDivElement).style.transform = 'translateX(2px)';
+                  (e.currentTarget as HTMLDivElement).style.boxShadow = `0 0 12px ${cfg.border}`;
+                }}
+                onMouseLeave={e => {
+                  (e.currentTarget as HTMLDivElement).style.transform = 'none';
+                  (e.currentTarget as HTMLDivElement).style.boxShadow = 'none';
+                }}
+              >
+                {/* Severity icon */}
                 <div style={{
-                  fontSize: 13,
-                  fontWeight: 600,
+                  flexShrink: 0,
+                  width: 30,
+                  height: 30,
+                  borderRadius: 8,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                   color: cfg.color,
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
+                  background: cfg.bg,
                 }}>
-                  {a.message || a.type}
+                  {cfg.icon}
                 </div>
-                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
-                  {formatMeterId(a.meter_id)}
-                </div>
-              </div>
 
-              {/* Time */}
-              <div style={{
-                fontSize: 10,
-                color: 'var(--text-muted)',
-                whiteSpace: 'nowrap',
-                flexShrink: 0,
-              }}>
-                {formatTime(a.created_at)}
+                {/* Content */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{
+                    fontSize: 13,
+                    fontWeight: 600,
+                    color: cfg.color,
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                  }}>
+                    {a.message || a.type}
+                  </div>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
+                    {formatMeterId(a.meter_id)}
+                  </div>
+                </div>
+
+                {/* Time */}
+                <div style={{
+                  fontSize: 10,
+                  color: 'var(--text-muted)',
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0,
+                }}>
+                  {formatTime(a.created_at)}
+                </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

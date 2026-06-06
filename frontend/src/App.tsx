@@ -10,7 +10,7 @@ import BillingCard from './components/dashboard/BillingCard';
 import AnomalyPanel from './components/dashboard/AnomalyPanel';
 import ChatWidget from './components/dashboard/ChatWidget';
 import UsageForecastWeatherChart from './components/dashboard/UsageForecastWeatherChart';
-import BenchmarkingGoalsPanel from './components/dashboard/BenchmarkingGoalsPanel';
+import ConsumptionComparison from './components/dashboard/ConsumptionComparison';
 import ZoneBreakdownChart from './components/dashboard/ZoneBreakdownChart';
 
 function App() {
@@ -72,16 +72,16 @@ function App() {
 
       {/* ── Dashboard Body ── */}
       <main className="dashboard-main">
-        {/* Row 1: Conservation Goals | Live Metrics | Hourly Consumption */}
+        {/* Row 1: Consumption Comparison | Live Metrics | Hourly Consumption */}
         <div className="row-1-grid" style={{ marginBottom: 20 }}>
-          <BenchmarkingGoalsPanel meterId={selectedMeter} />
+          <ConsumptionComparison meterId={selectedMeter} />
           <SensorHero meterId={selectedMeter} />
         </div>
 
         {/* Row 2: Usage Forecast + Weather | Zone Breakdown */}
         <div className="forecast-row" style={{ marginBottom: 20 }}>
           <UsageForecastWeatherChart meterId={selectedMeter} />
-          <ZoneBreakdownChart />
+          <ZoneBreakdownChart meterId={selectedMeter} />
         </div>
 
         {/* Row 3: Sensor Readings Table | Meter Details */}

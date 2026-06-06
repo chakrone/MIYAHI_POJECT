@@ -121,6 +121,51 @@ public class ReadingsController {
     }
 
     /**
+     * GET /api/readings/{meterId}/volume?range=24h — Volume consumed by a meter in a time window.
+     * Returns a lightweight JSON object instead of downloading all raw readings.
+     */
+    @GetMapping("/{meterId}/volume")
+    public ResponseEntity<Map<String, Object>> getVolumeConsumed(
+            @PathVariable String meterId,
+            @RequestParam(defaultValue = "24h") String range) {
+
+        Duration duration = parseDuration(range);
+        Instant since = Instant.now().minus(duration);
+
+        Double consumed = repository.findVolumeConsumed(meterId, since);
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("meterId", meterId);
+        result.put("range", range);
+        result.put("volumeM3", consumed != null ? Math.round(consumed * 10000.0) / 10000.0 : 0.0);
+        return ResponseEntity.ok(result);
+    }
+
+    /**
+     * GET /api/readings/{meterId}/daily?range=7d — Daily volume consumption.
+     * Returns an array of {date, volumeM3} objects, one per day.
+     */
+    @GetMapping("/{meterId}/daily")
+    public ResponseEntity<List<Map<String, Object>>> getDailyVolumes(
+            @PathVariable String meterId,
+            @RequestParam(defaultValue = "7d") String range) {
+
+        Duration duration = parseDuration(range);
+        Instant since = Instant.now().minus(duration);
+
+        List<Object[]> rows = repository.findDailyVolumes(meterId, since);
+
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (Object[] row : rows) {
+            Map<String, Object> entry = new HashMap<>();
+            entry.put("date", (String) row[0]);
+            entry.put("volumeM3", Math.round(((Number) row[1]).doubleValue() * 10000.0) / 10000.0);
+            result.add(entry);
+        }
+        return ResponseEntity.ok(result);
+    }
+
+    /**
      * Parse human-readable duration strings like "5m", "1h", "7d".
      */
     private Duration parseDuration(String range) {
