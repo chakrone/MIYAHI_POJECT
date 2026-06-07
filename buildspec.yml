@@ -2,11 +2,9 @@
 # MIYAHI — AWS CodeBuild Build & Test Spec
 # ============================================================
 version: 0.2
-
 env:
   parameter-store:
     EC2_HOST: /miyahi/EC2_HOST
-
 phases:
   install:
     runtime-versions:
@@ -15,12 +13,10 @@ phases:
       nodejs: "20"
     commands:
       - echo "Installing dependencies..."
-
   pre_build:
     commands:
       - echo "Build started on $(date)"
       - echo "Commit SHA = $CODEBUILD_RESOLVED_SOURCE_VERSION"
-
   build:
     commands:
       # ── Java Services ──────────────────────
@@ -28,46 +24,27 @@ phases:
       - echo "Building Java services..."
       - echo "========================================="
       - |
-        #!/bin/bash
-        JAVA_SERVICES=(
-          "api-gateway"
-          "eureka-server"
-          "config-server"
-          "ingestion-service"
-          "meter-registry-service"
-          "alert-service"
-          "billing-service"
-        )
-        for svc in "${JAVA_SERVICES[@]}"; do
+        for svc in api-gateway eureka-server config-server ingestion-service meter-registry-service alert-service billing-service; do
           echo "Building $svc..."
-          cd $CODEBUILD_SRC_DIR/services/$svc
+          cd "$CODEBUILD_SRC_DIR/services/$svc"
           mvn clean package -B -q
-          cd $CODEBUILD_SRC_DIR
+          cd "$CODEBUILD_SRC_DIR"
         done
-
       # ── Python Services ────────────────────
       - echo "========================================="
       - echo "Testing Python services..."
       - echo "========================================="
       - |
-        #!/bin/bash
-        PYTHON_SERVICES=(
-          "anomaly-detection"
-          "forecasting"
-          "weather-service"
-          "chatbot-service"
-        )
-        for svc in "${PYTHON_SERVICES[@]}"; do
+        for svc in anomaly-detection forecasting weather-service chatbot-service; do
           echo "Testing $svc..."
-          cd $CODEBUILD_SRC_DIR/services/$svc
+          cd "$CODEBUILD_SRC_DIR/services/$svc"
           pip install -r requirements.txt -q
           if [ -d "tests" ]; then
             pip install pytest -q
-            pytest tests/ -v --junitxml=$CODEBUILD_SRC_DIR/test-results-$svc.xml || true
+            pytest tests/ -v --junitxml="$CODEBUILD_SRC_DIR/test-results-$svc.xml" || true
           fi
-          cd $CODEBUILD_SRC_DIR
+          cd "$CODEBUILD_SRC_DIR"
         done
-
       # ── Frontend ───────────────────────────
       - echo "========================================="
       - echo "Building frontend..."
@@ -77,18 +54,15 @@ phases:
       - npm run lint || true
       - npm run build
       - cd $CODEBUILD_SRC_DIR
-
   post_build:
     commands:
       - echo "Build completed on $(date)"
-
 reports:
   miyahi-test-reports:
     files:
       - "services/**/target/surefire-reports/TEST-*.xml"
       - "test-results-*.xml"
     file-format: JUNITXML
-
 cache:
   paths:
     - "/root/.m2/**/*"
