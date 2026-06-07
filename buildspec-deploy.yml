@@ -28,12 +28,14 @@ phases:
       - echo "Deploying to EC2 at $EC2_HOST..."
       - |
         ssh -o StrictHostKeyChecking=no -i /tmp/miyahi-key.pem ubuntu@$EC2_HOST bash << 'DEPLOY_SCRIPT'
-          set -e
-          echo "Deploying MIYAHI to production..."
+          set -xe
+          echo "Connected to EC2 successfully"
 
           cd /opt/miyahi/MIYAHI_POJECT
+          echo "Current directory: $(pwd)"
+          echo "Git status:"
+          git status
 
-          # Safe pull — preserve server-specific files
           PROTECTED_FILES=(
             "services/api-gateway/src/main/resources/application.yml"
             "docker-compose.yml"
@@ -43,18 +45,25 @@ phases:
 
           echo "Backing up protected files..."
           for f in "${PROTECTED_FILES[@]}"; do
+            echo "Backing up $f..."
             cp "$f" "/tmp/$(basename $f).bak"
             git update-index --no-skip-worktree "$f"
           done
 
-          git stash push -- "${PROTECTED_FILES[@]}"
-          git update-index --refresh
+          echo "Stashing protected files..."
+          git stash push -- "${PROTECTED_FILES[@]}" || echo "Nothing to stash, continuing..."
+
+          echo "Refreshing index..."
+          git update-index --refresh || true
+
+          echo "Pulling latest code..."
           git pull origin main
 
           echo "Restoring protected files..."
           for f in "${PROTECTED_FILES[@]}"; do
+            echo "Restoring $f..."
             cp "/tmp/$(basename $f).bak" "$f"
-            git update-index --refresh
+            git update-index --refresh || true
             git update-index --skip-worktree "$f"
           done
 
@@ -82,7 +91,7 @@ phases:
       # Build and deploy
       - |
         ssh -o StrictHostKeyChecking=no -i /tmp/miyahi-key.pem ubuntu@$EC2_HOST bash << 'DEPLOY_SCRIPT'
-          set -e
+          set -xe
           cd /opt/miyahi/MIYAHI_POJECT
 
           echo "Building and restarting Docker Compose stack..."
