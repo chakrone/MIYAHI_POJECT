@@ -28,6 +28,7 @@ phases:
       - echo "Building Java services..."
       - echo "========================================="
       - |
+        #!/bin/bash
         JAVA_SERVICES=(
           "api-gateway"
           "eureka-server"
@@ -49,6 +50,7 @@ phases:
       - echo "Testing Python services..."
       - echo "========================================="
       - |
+        #!/bin/bash
         PYTHON_SERVICES=(
           "anomaly-detection"
           "forecasting"
