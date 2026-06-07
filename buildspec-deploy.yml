@@ -27,7 +27,7 @@ phases:
     commands:
       - echo "Deploying to EC2 at $EC2_HOST..."
       - |
-        ssh -o StrictHostKeyChecking=no -i /tmp/miyahi-key.pem ubuntu@$EC2_HOST << 'DEPLOY_SCRIPT'
+        ssh -o StrictHostKeyChecking=no -i /tmp/miyahi-key.pem ubuntu@$EC2_HOST bash << 'DEPLOY_SCRIPT'
           set -e
           echo "Deploying MIYAHI to production..."
 
@@ -81,7 +81,7 @@ phases:
 
       # Build and deploy
       - |
-        ssh -o StrictHostKeyChecking=no -i /tmp/miyahi-key.pem ubuntu@$EC2_HOST << 'DEPLOY_SCRIPT'
+        ssh -o StrictHostKeyChecking=no -i /tmp/miyahi-key.pem ubuntu@$EC2_HOST bash << 'DEPLOY_SCRIPT'
           set -e
           cd /opt/miyahi/MIYAHI_POJECT
 
