@@ -1,0 +1,110 @@
+# ============================================================
+# MIYAHI — AWS CodeBuild Deploy Spec
+# SSH into EC2 and rebuild Docker Compose stack
+# ============================================================
+version: 0.2
+
+env:
+  parameter-store:
+    EC2_HOST: /miyahi/EC2_HOST
+    EC2_SSH_KEY: /miyahi/EC2_SSH_KEY
+    PG_PASSWORD: /miyahi/PG_PASSWORD
+    TS_PASSWORD: /miyahi/TS_PASSWORD
+    MQTT_PASSWORD: /miyahi/MQTT_PASSWORD
+    JWT_SECRET: /miyahi/JWT_SECRET
+    GF_ADMIN_PASSWORD: /miyahi/GF_ADMIN_PASSWORD
+    OWM_API_KEY: /miyahi/OWM_API_KEY
+    GEMINI_API_KEY: /miyahi/GEMINI_API_KEY
+
+phases:
+  install:
+    commands:
+      - echo "Preparing SSH key..."
+      - printf '%s\n' "$EC2_SSH_KEY" > /tmp/miyahi-key.pem
+      - chmod 400 /tmp/miyahi-key.pem
+
+  build:
+    commands:
+      - echo "Deploying to EC2 at $EC2_HOST..."
+      - |
+        ssh -o StrictHostKeyChecking=no -i /tmp/miyahi-key.pem ubuntu@$EC2_HOST << 'DEPLOY_SCRIPT'
+          set -e
+          echo "Deploying MIYAHI to production..."
+
+          cd /opt/miyahi/MIYAHI_POJECT
+
+          # Safe pull — preserve server-specific files
+          PROTECTED_FILES=(
+            "services/api-gateway/src/main/resources/application.yml"
+            "docker-compose.yml"
+            "frontend/nginx.conf"
+            ".gitignore"
+          )
+
+          echo "Backing up protected files..."
+          for f in "${PROTECTED_FILES[@]}"; do
+            cp "$f" "/tmp/$(basename $f).bak"
+            git update-index --no-skip-worktree "$f"
+          done
+
+          git stash push -- "${PROTECTED_FILES[@]}"
+          git update-index --refresh
+          git pull origin main
+
+          echo "Restoring protected files..."
+          for f in "${PROTECTED_FILES[@]}"; do
+            cp "/tmp/$(basename $f).bak" "$f"
+            git update-index --refresh
+            git update-index --skip-worktree "$f"
+          done
+
+          echo "Pull complete. Protected files restored."
+        DEPLOY_SCRIPT
+
+      # Run sed commands separately to inject actual secret values
+      - |
+        ssh -o StrictHostKeyChecking=no -i /tmp/miyahi-key.pem ubuntu@$EC2_HOST \
+          "cd /opt/miyahi/MIYAHI_POJECT && \
+           sed -i \"s|^PG_PASSWORD=.*|PG_PASSWORD=$PG_PASSWORD|\" .env && \
+           sed -i \"s|^TS_PASSWORD=.*|TS_PASSWORD=$TS_PASSWORD|\" .env && \
+           sed -i \"s|^MQTT_PASSWORD=.*|MQTT_PASSWORD=$MQTT_PASSWORD|\" .env && \
+           sed -i \"s|^JWT_SECRET=.*|JWT_SECRET=$JWT_SECRET|\" .env && \
+           sed -i \"s|^GF_SECURITY_ADMIN_PASSWORD=.*|GF_SECURITY_ADMIN_PASSWORD=$GF_ADMIN_PASSWORD|\" .env && \
+           sed -i \"s|^OWM_API_KEY=.*|OWM_API_KEY=$OWM_API_KEY|\" .env && \
+           sed -i \"s|^GEMINI_API_KEY=.*|GEMINI_API_KEY=$GEMINI_API_KEY|\" .env"
+
+      # Update frontend API URL
+      - |
+        ssh -o StrictHostKeyChecking=no -i /tmp/miyahi-key.pem ubuntu@$EC2_HOST \
+          "cd /opt/miyahi/MIYAHI_POJECT && \
+           sed -i \"s|VITE_API_URL:.*|VITE_API_URL: http://$EC2_HOST:8080/api|\" docker-compose.yml"
+
+      # Build and deploy
+      - |
+        ssh -o StrictHostKeyChecking=no -i /tmp/miyahi-key.pem ubuntu@$EC2_HOST << 'DEPLOY_SCRIPT'
+          set -e
+          cd /opt/miyahi/MIYAHI_POJECT
+
+          echo "Building and restarting Docker Compose stack..."
+          docker compose --profile all up -d --build --remove-orphans
+
+          echo "Waiting 60 seconds for services to start..."
+          sleep 60
+
+          echo "Running health checks..."
+          curl -sf http://localhost:8080/actuator/health && echo "  API Gateway OK" || echo " API Gateway not ready"
+          curl -sf http://localhost:8761/actuator/health && echo "  Eureka OK" || echo " Eureka not ready"
+          curl -sf -o /dev/null http://localhost:80 && echo "  Frontend OK" || echo " Frontend not ready"
+          curl -sf -o /dev/null http://localhost:3000 && echo "  Grafana OK" || echo " Grafana not ready"
+
+          docker image prune -f
+
+          echo ""
+          echo "Deployment complete! Service status:"
+          docker compose --profile all ps
+        DEPLOY_SCRIPT
+
+  post_build:
+    commands:
+      - rm -f /tmp/miyahi-key.pem
+      - echo "Deployment finished at $(date)"
