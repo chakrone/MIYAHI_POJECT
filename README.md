@@ -115,7 +115,7 @@ The simulator starts 5 virtual water meters, each publishing readings every 5 se
 
 ### 5. Open the Dashboard
 
-- **Frontend:** http://localhost:80
+- **Frontend:** http://localhost:5173
 - **Grafana:** http://localhost:3000 (credentials in `.env`)
 - **Eureka:** http://localhost:8761
 
