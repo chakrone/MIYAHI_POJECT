@@ -70,7 +70,10 @@ phases:
           echo "Pull complete. Protected files restored."
         DEPLOY_SCRIPT
 
-      # Run sed commands separately to inject actual secret values
+      # Inject secrets into .env AND patch VITE_API_URL in docker-compose.yml
+      # NOTE: This runs AFTER the protected-file restore above, so docker-compose.yml
+      # is already in its final state. The VITE_API_URL patch must happen here —
+      # not before the restore — to avoid being overwritten.
       - |
         ssh -o StrictHostKeyChecking=no -i /tmp/miyahi-key.pem ubuntu@$EC2_HOST \
           "cd /opt/miyahi/MIYAHI_POJECT && \
@@ -80,13 +83,10 @@ phases:
            sed -i \"s|^JWT_SECRET=.*|JWT_SECRET=$JWT_SECRET|\" .env && \
            sed -i \"s|^GF_SECURITY_ADMIN_PASSWORD=.*|GF_SECURITY_ADMIN_PASSWORD=$GF_ADMIN_PASSWORD|\" .env && \
            sed -i \"s|^OWM_API_KEY=.*|OWM_API_KEY=$OWM_API_KEY|\" .env && \
-           sed -i \"s|^GEMINI_API_KEY=.*|GEMINI_API_KEY=$GEMINI_API_KEY|\" .env"
-
-      # Update frontend API URL
-      - |
-        ssh -o StrictHostKeyChecking=no -i /tmp/miyahi-key.pem ubuntu@$EC2_HOST \
-          "cd /opt/miyahi/MIYAHI_POJECT && \
-           sed -i \"s|VITE_API_URL:.*|VITE_API_URL: http://$EC2_HOST:8080/api|\" docker-compose.yml"
+           sed -i \"s|^GEMINI_API_KEY=.*|GEMINI_API_KEY=$GEMINI_API_KEY|\" .env && \
+           sed -i \"s|VITE_API_URL:.*|VITE_API_URL: http://$EC2_HOST:8080/api|\" docker-compose.yml && \
+           echo \"Verifying VITE_API_URL patch...\" && \
+           grep 'VITE_API_URL' docker-compose.yml"
 
       # Build and deploy
       - |
